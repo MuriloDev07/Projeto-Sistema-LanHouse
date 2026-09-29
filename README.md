@@ -91,6 +91,4 @@ curl -X POST http://127.0.0.1:5000/produtos -H "Content-Type: application/json" 
 
 ## Contexto
 
-Projeto criado para o sistema de loja da lan house "Taciana Variedades", servindo também como o meu primeiro projeto pessoal para o meu estudo sobre Flask + SqLite + teste automatizados com o pytest.
-Com isso, eu finalizo grande parte do meu aprendizado sobre Python.
-O proximo passo agora será criar um sistema para a Lan House em si mais pra frente.
+Projeto criado para gerenciar o estoque real da lan house 'Taciana Variedades'. Este sistema serviu como o meu principal laboratório prático para consolidar conhecimentos em Back-end com Python, integrando rotas Flask, banco de dados SQLite e garantindo a confiabilidade com testes automatizados via Pytest. O próximo passo será evoluir esta arquitetura e integrar novas funcionalidades para a gestão completa da Lan House.
