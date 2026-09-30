@@ -1,4 +1,6 @@
 from flask import Flask, g, jsonify, request
+from Interface.sistema import *
+from utilitarios import bubble_sort, encerramento
 from Banco.banco import Conexao
 from Banco.CategoriaRepositorio import CategoriaRepositorio, validar_categoria
 from Banco.ProdutoRepositorio import ProdutoRepositorio, validar_produto
@@ -155,7 +157,21 @@ def update_produto(produto_id):
     else:
         return jsonify(mensagem = "Produto atualizado com sucesso", produto = dados)
 
-if __name__ == "__main__":
-    banco = Conexao("Loja")
-    banco.criar_tabelas()
-    app.run(debug=True)
+opc = 1
+while opc != 3:
+    opc = sistema()
+
+    if opc == 1:
+        banco = get_conexao()[0]
+        categorias = banco.listar_categorias()
+        categorias_ordenadas = bubble_sort(categorias)
+
+        for categoria in categorias:
+            print(f"Categoria: {categoria}")
+    
+
+    if __name__ == "__main__":
+        banco = Conexao("Loja")
+        banco.criar_tabelas()
+        app.run(debug=True)
+
