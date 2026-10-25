@@ -1,0 +1,14 @@
+# Ambientes virtuais e cache do Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Ficheiros sensíveis e Git
+.env
+.git/
+.gitignore
+
+# Antigo banco de dados local
+*.db
+*.sqlite3

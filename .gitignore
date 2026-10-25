@@ -1,4 +1,13 @@
+# Ambientes virtuais e cache do Python
+.venv/
 venv/
-*.db
 __pycache__/
 *.pyc
+
+# Ficheiros sensíveis e Git
+.env
+.git/
+
+# Antigo banco de dados local
+*.db
+*.sqlite3

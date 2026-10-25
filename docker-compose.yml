@@ -1,0 +1,27 @@
+services:
+  banco_dados:
+    image: postgres:15-alpine
+    container_name: taciana_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: taciana_api
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    depends_on:
+      - banco_dados
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@banco_dados:5432/${DB_NAME}
+  
+volumes:
+  pgdata:

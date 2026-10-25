@@ -1,161 +1,157 @@
-from flask import Flask, g, jsonify, request
-from Banco.banco import Conexao
-from Banco.CategoriaRepositorio import CategoriaRepositorio, validar_categoria
-from Banco.ProdutoRepositorio import ProdutoRepositorio, validar_produto
+import os
+from flask import Flask, jsonify, request
+from models.database import db
 
 app = Flask("Taciana Lanhouse")
 
-def get_conexao():
-    if 'conexao' not in g:
-        g.conexao = Conexao("Loja")
-        g.categorias = CategoriaRepositorio(g.conexao)
-        g.produtos = ProdutoRepositorio(g.conexao)
-    return g.categorias, g.produtos
+caminho_banco = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = caminho_banco
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-@app.teardown_appcontext
-def close_banco(exception):
-    banco = g.pop('conexao', None)
-    if banco is not None:
-        banco.conexao.close()
+db.init_app(app)
+from models.categoria import Categoria
+from models.produto import Produto
+
+with app.app_context():
+    db.create_all()
 
 # CATEGORIAS
 
 @app.route('/categorias', methods=['GET'])
 def get_categorias():
-    banco = get_conexao()[0]
-    categorias = banco.listar_categorias()
-    return jsonify(mensagem = "Lista de Categorias", categorias = categorias)
+    categorias = Categoria.query.all()
+    resultado = [{"id": c.id, "nome": c.nome} for c in categorias]
+    return jsonify(mensagem = "Lista de Categorias", categorias = resultado)
 
 @app.route('/categorias/<int:categoria_id>', methods=['GET'])
 def get_categoria_por_id(categoria_id):
-    banco = get_conexao()[0]
-    categoria = banco.buscar_categoria_por_id(categoria_id)
+    categoria = db.session.get(Categoria, categoria_id)
 
-    if categoria is not None:
-        return jsonify(categoria)
-    else:
-        return jsonify({"erro": "Id não encontrado"}), 404
+    if categoria:
+        return jsonify({"id": categoria.id, "nome": categoria.nome})
+    return jsonify({"erro": "Categoria não encontrada"}), 404
 
 @app.route('/categorias', methods=['POST'])
 def create_categoria():
     dados = request.get_json()
 
-    resultado = validar_categoria(dados)
-    if resultado is None:
-        return resultado
-
-    banco = get_conexao()[0]
-
-    id = banco.inserir_categoria(dados)
-    nova_categoria = {**dados, "id": id}
-    return jsonify(nova_categoria), 201
+    validacao = Categoria.validar(dados)
+    if validacao is not True:
+        return validacao
+    
+    nova_categoria = Categoria(nome=dados['nome'])
+    db.session.add(nova_categoria)
+    db.session.commit()
+    return jsonify({"id": nova_categoria.id, "nome": nova_categoria.nome}), 201
 
 @app.route('/categorias/<int:categoria_id>', methods=['DELETE'])
 def remove_categoria(categoria_id):
-    banco, produtos = get_conexao()
+    categoria = db.session.get(Categoria, categoria_id)
 
-    if banco.buscar_categoria_por_id(categoria_id) is None:
+    if categoria is None:
         return jsonify({"erro": "Categoria não encontrada"}), 404
 
-    existe = produtos.existe_produto_com_categoria(categoria_id)
-    if existe:
+    produto_existente = Produto.query.filter_by(categoria_id=categoria_id).first()
+    if produto_existente:
         return jsonify({"erro": "Categoria está sendo usada"}), 400
 
-    resultado = banco.remover_categoria(categoria_id)
+    db.session.delete(categoria)
+    db.session.commit()
 
-    if resultado is not True:
-        return jsonify({"erro": "Id não encontrado"}), 404
-    else:
-        return jsonify(mensagem = "Categoria removida com sucesso")
+    return jsonify(mensagem = "Categoria removida com sucesso")
 
 @app.route('/categorias/<int:categoria_id>', methods=['PUT'])
 def update_categoria(categoria_id):
     dados = request.get_json()
+    categoria = db.session.get(Categoria, categoria_id)
 
-    resultado = validar_categoria(dados)
-    if resultado is not True:
-        return resultado
+    if categoria is None:
+        return jsonify({"erro": "Categoria não encontrada"}), 404
 
-    banco = get_conexao()[0]
+    validacao = Categoria.validar(dados)
+    if validacao is not True:
+        return validacao
 
-    dados = {**dados, "id": categoria_id}
-    resultado = banco.atualizar_categoria(dados)
+    categoria.nome = dados['nome']
+    db.session.commit()
 
-    if resultado is not True:
-        return jsonify({"erro": "Id não encontrado"}), 404
-    else:
-        return jsonify(mensagem = "Categoria atualizada com sucesso", categoria = dados)
+    return jsonify(mensagem = "Categoria atualizada com sucesso", categoria = dados)
 
 # PRODUTOS
 
 @app.route('/produtos', methods=['GET'])
 def get_produto():
-    banco = get_conexao()[1]
-    produtos = banco.listar_produtos()
-    return jsonify(mensagem = "Lista de Produtos", produtos = produtos)
+    produtos = Produto.query.all()
+    resultado = [p.to_dict() for p in produtos]
+    return jsonify(mensagem = "Lista de Produtos", produtos = resultado)
 
 @app.route('/produtos/<int:produto_id>', methods=['GET'])
 def get_produto_por_id(produto_id):
-    banco = get_conexao()[1]
-    produto = banco.buscar_produto_por_id(produto_id)
+    produto = db.session.get(Produto, produto_id)
 
-    if produto is not None:
-        return jsonify(produto)
-    else:
-        return jsonify({"erro": "Id não encontrado"}), 404
+    if produto:
+        return jsonify(produto.to_dict())
+    return jsonify({"erro": "Produto não encontrado"}), 404
 
 @app.route('/produtos', methods=['POST'])
 def create_produto():
     dados = request.get_json()
 
-    resultado = validar_produto(dados)
-    if resultado is not True:
-        return resultado
+    validacao = Produto.validar(dados)
+    if validacao is not True:
+        return validacao
 
-    categorias, banco = get_conexao()
+    categoria_existente = db.session.get(Categoria, dados['categoria_id'])
+    if categoria_existente is None:
+        return jsonify({"erro": "Categoria não encontrada"}), 404
 
-    resultado = categorias.buscar_categoria_por_id(dados['categoria_id'])
-    if resultado is None:
-        return jsonify({"erro": "Id não encontrado"}), 404
+    novo_produto = Produto(
+        nome=dados['nome'], 
+        preco=dados['preco'], 
+        quantidade=dados['quantidade'], 
+        categoria_id=dados['categoria_id']
+    )
+    
+    db.session.add(novo_produto)
+    db.session.commit()
 
-    id = banco.inserir_produto(dados)
-    novo_produto = {**dados, "id": id}
-    return jsonify(novo_produto), 201
+    return jsonify(novo_produto.to_dict()), 201
 
 @app.route('/produtos/<int:produto_id>', methods=['DELETE'])
 def remove_produto(produto_id):
-    banco = get_conexao()[1]
-    resultado = banco.remover_produto(produto_id)
+    produto = db.session.get(Produto, produto_id)
 
-    if resultado is not True:
-        return jsonify({"erro": "Id não encontrado"}), 404
-    else:
-        return jsonify(mensagem = "Produto removido com sucesso")
+    if produto is None:
+        return jsonify({"erro": "Produto não encontrado"}), 404
+
+    db.session.delete(produto)
+    db.session.commit()
+
+    return jsonify(mensagem = "Produto removido com sucesso")
 
 @app.route('/produtos/<int:produto_id>', methods=['PUT'])
 def update_produto(produto_id):
     dados = request.get_json()
+    produto = db.session.get(Produto, produto_id)
 
-    resultado = validar_produto(dados)
-    if resultado is not True:
-        return resultado
+    if produto is None:
+        return jsonify({"erro": "Produto não encontrado"}), 404
 
-    categoria, banco = get_conexao()
+    validacao = Produto.validar(dados)
+    if validacao is not True:
+        return validacao
+
+    categoria_existe = db.session.get(Categoria, dados['categoria_id'])
+    if categoria_existe is None:
+        return jsonify({"erro": "Categoria não encontrada"}), 404
     
-    dados = {**dados, "id": produto_id}
+    produto.nome = dados['nome']
+    produto.preco = dados['preco']
+    produto.quantidade = dados['quantidade']
+    produto.categoria_id = dados['categoria_id']
+    db.session.commit()
 
-    existe = categoria.buscar_categoria_por_id(dados['categoria_id'])
-    if existe is None:
-        return jsonify({"erro": "Id não encontrado"}), 404
-    
-    resultado = banco.atualizar_produto(dados)
-
-    if resultado is not True:
-        return jsonify({"erro": "Id não encontrado"}), 404
-    else:
-        return jsonify(mensagem = "Produto atualizado com sucesso", produto = dados)
+    return jsonify(mensagem="Produto atualizado com sucesso", produto = produto.to_dict())
 
 if __name__ == "__main__":
-    banco = Conexao("Loja")
-    banco.criar_tabelas()
     app.run(debug=True)
