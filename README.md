@@ -1,76 +1,77 @@
-# Sistema de Loja - Lan House
+# Sistema de Loja - Lan House (V2.0)
 
-API REST para gerenciar produtos e categorias de uma lan house, desenvolvida com Flask e SQLite.
+API REST conteinerizada para gerenciar produtos e categorias de uma lan house, desenvolvida com Flask, SQLAlchemy, PostgreSQL e Docker.
 
 ## Contexto
 
-Projeto criado para gerenciar o estoque real da lan house 'Taciana Variedades'. Este sistema serviu como o meu principal laboratório prático para consolidar conhecimentos em Back-end com Python, integrando rotas Flask, banco de dados SQLite e garantindo a confiabilidade com testes automatizados via Pytest. O próximo passo será evoluir esta arquitetura e integrar novas funcionalidades para a gestão completa da Lan House.
+Projeto criado para gerenciar o estoque real da lan house 'Taciana Variedades'. Inicialmente construído com SQLite para consolidação de fundamentos, o sistema evoluiu para uma **versão 2.0 focada em infraestrutura e escalabilidade**. A aplicação agora roda em um ambiente totalmente isolado com Docker, utilizando o PostgreSQL como banco de dados relacional e mantendo a alta confiabilidade com testes automatizados via Pytest.
 
 ## Funcionalidades
 
 - CRUD completo de **categorias** (ex: Bebidas, Salgadinhos, Acessórios de PC)
 - CRUD completo de **produtos**, cada um vinculado a uma categoria
-- Validação de dados de entrada (nome obrigatório, preço numérico, etc.)
-- Impede remover uma categoria que ainda tem produtos vinculados a ela
-- Impede criar/atualizar um produto com uma categoria que não existe
+- Validação de dados de entrada (nome obrigatório, preço numérico, estoque não negativo)
+- Bloqueio de exclusão de categoria se houver produtos vinculados
+- Impedimento de criação/atualização de produto com `categoria_id` inexistente
 
 ## Decisões de Engenharia e Regras de Negócio
 
-Para garantir que o sistema não permitia inconsistências, tomei as seguintes decisões:
+Para garantir que o sistema escale sem inconsistências, a arquitetura atual baseia-se nas seguintes decisões:
 
-* **Proteção contra Produtos Órfãos:** Implementei uma restrição rígida no método `DELETE` das categorias. O sistema **impede** a remoção de uma categoria (ex: "Salgadinhos") se ainda existirem produtos vinculados a ela.
-* **Validação de Referência:** No `POST` e `PUT` de produtos, a API bloqueia a criação de um item associado a um `categoria_id` inexistente.
-* **Segurança de Dados:** Validações de entrada estritas (nome obrigatório, preço numérico e stock não negativo) diretamente na camada de negócio, antes de tentar persistir no banco.
+* **Infraestrutura Imutável (Docker):** O ambiente de desenvolvimento e produção é idêntico. O uso do `docker-compose` garante que a API e o banco de dados subam juntos e configurados, eliminando o problema de "na minha máquina funciona".
+* **Segurança de Credenciais:** As chaves e senhas do banco de dados não ficam hardcoded. O sistema consome variáveis de ambiente injetadas por um arquivo `.env` ignorado pelo Git.
+* **Integridade Relacional (PostgreSQL):** A migração do SQLite para o PostgreSQL garante maior robustez para futuras requisições simultâneas e integridade de dados em um SGBD de mercado.
+* **Proteção contra Produtos Órfãos:** Restrição rígida no método `DELETE` das categorias. O sistema impede a remoção de uma categoria se ainda existirem produtos vinculados a ela.
 
 ## Por que esta Stack?
 
-* **Python + Flask:** Escolhidos pela rapidez na prototipagem de rotas RESTful, permitindo que o meu foco estivesse nas regras de negócio e não em configurações complexas de infraestrutura.
-* **SQLite + Padrão Repository:** Para manter o projeto portátil e modular, isolei as queries de banco de dados em classes de repositório (`CategoriaRepositorio.py` e `ProdutoRepositorio.py`).
-* **Pytest (Testes Automatizados):** Com as regras de negócio a ficarem mais complexas, testar manualmente no Postman/Insomnia deixou de ser viável. Introduzi o Pytest para garantir que as restrições de categoria nunca fossem quebradas em futuras atualizações.
+* **Python + Flask:** Mantidos pela rapidez na prototipagem de rotas RESTful e flexibilidade arquitetural.
+* **SQLAlchemy (ORM):** Substituiu o antigo padrão de repositório manual para agilizar a modelagem de dados e a comunicação segura com o PostgreSQL.
+* **Docker & Docker Compose:** Escolhidos para orquestrar a infraestrutura, garantindo que o banco de dados e a aplicação se comuniquem em uma rede isolada.
+* **Pytest (Testes Automatizados):** Uma suíte de testes que assegura que refatorações estruturais (como a troca de banco de dados) não quebrem as regras de negócio.
 
 ## O que aprendi e o que faria diferente (Próximos Passos)
 
-1. **Vendas Simultâneas (Concorrência):** O que acontece se dois funcionários tentarem dar baixa no último refrigerante do estoque exatamente no mesmo segundo? Atualmente, o sistema pode falhar e registrar um estoque negativo. Como próximo passo, quero estudar como os bancos de dados lidam com requisições simultâneas para prevenir esse erro.
-2. **Histórico de Produtos:** Em vez de usar o método `DELETE` para apagar um produto que a Lan House parou de vender, percebi que seria mais inteligente inativá-lo. Apagar o produto exclui os dados, o que prejudicaria um futuro relatório de vendas passadas.
-3. **Identificação (Autenticação):** Atualmente qualquer pessoa com acesso à API faz alterações. A próxima evolução natural seria implementar um sistema de login para saber *qual* atendente registrou ou apagou cada produto.
+1. **Separação em Blueprints:** Atualmente as rotas estão centralizadas. O próximo passo de refatoração do código será utilizar *Flask Blueprints* para separar as rotas de Categorias e Produtos em módulos independentes.
+2. **Soft Delete (Histórico):** Em vez de apagar fisicamente um produto que parou de ser vendido, pretendo adicionar uma flag de "inativo". Apagar o produto exclui os dados históricos, prejudicando relatórios futuros.
+3. **Identificação (Autenticação JWT):** Implementar um sistema de login para registrar qual funcionário realizou cada operação de entrada e saída no estoque.
 
 ## Tecnologias
 
-- Python 3
-- Flask
-- SQLite
-- Pytest (testes automatizados)
+- Python 3 / Flask
+- PostgreSQL / SQLAlchemy
+- Docker / Docker Compose
+- Pytest
 
-## Como rodar o projeto
+---
 
-1. Clone o repositório
+## 🚀 Como rodar o projeto (V2.0)
+
+> **BREAKING CHANGE:** A versão 2.0 não utiliza mais banco de dados local em arquivo. É obrigatório ter o **Docker** e o **Docker Compose** instalados na sua máquina.
+
+1. Clone o repositório e entre na pasta
    ```bash
    git clone <url-do-seu-repo>
    cd <pasta-do-projeto>
    ```
 
-2. Crie e ative um ambiente virtual
+2. Configure as variáveis de ambiente
    ```bash
-   python -m venv venv
-   venv\Scripts\activate  # Windows
+   cp .env.example .env
    ```
+   > Abra o arquivo .env recém-criado e preencha com as senhas desejadas (este arquivo está protegido pelo .gitignore e não subirá para o GitHub).
 
-3. Instale as dependências
+3. Suba a infraestrutura completa com o Docker
    ```bash
-   pip install -r requirements.txt
+   docker-compose up --build
    ```
-
-4. Rode a aplicação
-   ```bash
-   python app.py
-   ```
-
-A API sobe em `http://127.0.0.1:5000`.
+   > O Docker fará o download do PostgreSQL, compilará a imagem da API e conectará os dois. A API estará disponível em http://127.0.0.1:5000.
 
 ## Rodando os testes
 
+Como a aplicação agora roda dentro de um contêiner, você deve disparar o Pytest por dentro da rede do Docker:
 ```bash
-pytest -v
+docker exec -it taciana_api pytest -v
 ```
 
 ## Endpoints
@@ -82,7 +83,7 @@ pytest -v
 | GET | /categorias/\<id\> | Busca uma categoria por id |
 | POST | /categorias | Cria uma categoria |
 | PUT | /categorias/\<id\> | Atualiza uma categoria |
-| DELETE | /categorias/\<id\> | Remove uma categoria (se não houver produtos vinculados) |
+| DELETE | /categorias/\<id\> | Remove uma categoria (se vazia) |
 
 ### Produtos
 | Método | Rota | Descrição |
@@ -93,22 +94,20 @@ pytest -v
 | PUT | /produtos/\<id\> | Atualiza um produto |
 | DELETE | /produtos/\<id\> | Remove um produto |
 
-## Exemplo de uso
-
-```bash
-curl -X POST http://127.0.0.1:5000/categorias -H "Content-Type: application/json" -d "{\"nome\": \"Bebidas\"}"
-
-curl -X POST http://127.0.0.1:5000/produtos -H "Content-Type: application/json" -d "{\"nome\": \"Coca-Cola\", \"preço\": 5.0, \"estoque\": 20, \"categoria_id\": 1}"
-```
-
 ## Estrutura do projeto
 
 ```bash
-├── app.py                  # Rotas Flask
-├── Banco/
-│   ├── banco.py             # Classe Conexao (gerencia SQLite)
-│   ├── CategoriaRepositorio.py
-│   └── ProdutoRepositorio.py
-├── test_app.py              # Testes automatizados
-└── requirements.txt
+├── models/
+│   ├── database.py          # Configuração do SQLAlchemy
+│   ├── categoria.py
+│   └── produto.py
+├── .env.example             # Template de variáveis de ambiente
+├── .gitignore               # Ignora .env, venv, caches
+├── .dockerignore            # Otimização da imagem Docker
+├── app.py                   # Motor da aplicação e Rotas Flask
+├── docker-compose.yml       # Orquestração (API + PostgreSQL)
+├── Dockerfile               # Receita da imagem da API
+├── LICENSE                  # Licença MIT
+├── requirements.txt         # Dependências do Python
+└── test_app.py              # Suíte de testes (Pytest)
 ```
