@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
-from models.database import db
-from models.categoria import Categoria
-from models.produto import Produto
-from models.schemas import CategoriaSchema
+from app.models.database import db
+from app.models.categoria import Categoria
+from app.models.produto import Produto
+from app.models.schemas import CategoriaSchema
 from marshmallow import ValidationError
 from flask_jwt_extended import jwt_required
 
