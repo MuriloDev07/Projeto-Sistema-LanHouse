@@ -9,14 +9,3 @@ class Categoria(db.Model):
 
     def __repr__(self):
         return f"<Categoria {self.nome}>"
-
-    @staticmethod
-    def validar(dados):
-        if not dados:
-             return jsonify({"erro": "Nenhum dado fornecido"}), 400
-        if 'nome' not in dados:
-            return jsonify({"erro": "O campo 'nome' é obrigatório"}), 400
-        if not dados['nome'] or not isinstance(dados['nome'], str):
-            return jsonify({"erro": "Nome inválido"}), 400
-        return True
-        

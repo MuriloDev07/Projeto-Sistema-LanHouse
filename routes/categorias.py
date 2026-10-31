@@ -2,13 +2,19 @@ from flask import Blueprint, jsonify, request
 from models.database import db
 from models.categoria import Categoria
 from models.produto import Produto
+from models.schemas import CategoriaSchema
+from marshmallow import ValidationError
+from flask_jwt_extended import jwt_required
 
 categorias_bp = Blueprint('categorias', __name__, url_prefix='/categorias')
+
+categoria_schema = CategoriaSchema()
+categorias_schema = CategoriaSchema(many=True)
 
 @categorias_bp.route('', methods=['GET'])
 def get_categorias():
     categorias = Categoria.query.all()
-    resultado = [{"id": c.id, "nome": c.nome} for c in categorias]
+    resultado = categorias_schema.dump(categorias)
     return jsonify(mensagem="Lista de Categorias", categorias=resultado)
 
 @categorias_bp.route('/<int:categoria_id>', methods=['GET'])
@@ -16,23 +22,26 @@ def get_categoria_por_id(categoria_id):
     categoria = db.session.get(Categoria, categoria_id)
 
     if categoria:
-        return jsonify({"id": categoria.id, "nome": categoria.nome})
+        return jsonify(categoria_schema.dump(categoria))
     return jsonify({"erro": "Categoria não encontrada"}), 404
 
 @categorias_bp.route('', methods=['POST'])
+@jwt_required()
 def create_categoria():
     dados = request.get_json()
 
-    validacao = Categoria.validar(dados)
-    if validacao is not True:
-        return validacao
+    try:
+        dados_validados = categoria_schema.load(dados)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
     
-    nova_categoria = Categoria(nome=dados['nome'])
+    nova_categoria = Categoria(nome=dados_validados['nome'])
     db.session.add(nova_categoria)
     db.session.commit()
-    return jsonify({"id": nova_categoria.id, "nome": nova_categoria.nome}), 201
+    return categoria_schema.dump(nova_categoria), 201
 
 @categorias_bp.route('/<int:categoria_id>', methods=['DELETE'])
+@jwt_required()
 def remove_categoria(categoria_id):
     categoria = db.session.get(Categoria, categoria_id)
 
@@ -49,6 +58,7 @@ def remove_categoria(categoria_id):
     return jsonify(mensagem = "Categoria removida com sucesso")
 
 @categorias_bp.route('/<int:categoria_id>', methods=["PUT"])
+@jwt_required()
 def update_categoria(categoria_id):
     dados = request.get_json()
     categoria = db.session.get(Categoria, categoria_id)
@@ -56,11 +66,12 @@ def update_categoria(categoria_id):
     if categoria is None:
         return jsonify({"erro": "Categoria não encontrada"}), 404
 
-    validacao = Categoria.validar(dados)
-    if validacao is not True:
-        return validacao
+    try:
+        dados_validados = categoria_schema.load(dados)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
-    categoria.nome = dados['nome']
+    categoria.nome = dados_validados['nome']
     db.session.commit()
 
-    return jsonify(mensagem = "Categoria atualizada com sucesso", categoria = dados)
+    return jsonify(mensagem = "Categoria atualizada com sucesso", categoria = categoria_schema.dump(categoria))
