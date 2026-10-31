@@ -1,141 +1,104 @@
-# Sistema de Loja - Lan House (V2.5)
+# Sistema de Loja - Lan House (v2.6.0)
 
-API REST conteinerizada para gerenciar produtos e categorias de uma lan house, desenvolvida com Flask, SQLAlchemy, PostgreSQL, Docker, validação com Marshmallow e segurança via JWT.
+API REST conteinerizada para gerenciar o estoque da lan house 'Taciana Variedades'. Evoluída de um protótipo em SQLite para uma infraestrutura escalável com PostgreSQL, o sistema foca em segurança (JWT), validação estrita (Marshmallow) e arquitetura corporativa (Application Factory) com 100% de cobertura de testes.
 
 ## Contexto
 
-Projeto criado para gerenciar o estoque real da lan house 'Taciana Variedades'. Inicialmente construído com SQLite para consolidação de fundamentos, o sistema evoluiu para uma infraestrutura escalável com PostgreSQL e Docker. Na atual **versão 2.5**, o foco foi a **Segurança e Validação**, integrando autenticação JWT, criptografia de senhas e serialização tipada com Marshmallow. O sistema mantém alta confiabilidade com testes automatizados via Pytest com 100% de cobertura.
+Projeto criado para gerenciar o estoque real da lan house 'Taciana Variedades'. Inicialmente construído com SQLite para consolidação de fundamentos, o sistema evoluiu para uma infraestrutura escalável com PostgreSQL e Docker. Na atual **versão 2.6.0**, o foco foi a **Arquitetura Corporativa**, refatorando o núcleo do sistema para o padrão Application Factory. A aplicação agora possui total isolamento entre configurações, rotas, regras de negócio e a suíte de testes automatizados (100% de cobertura via Pytest).
+
+## Arquitetura e Tecnologias
+
+A stack foi escolhida para simular um ambiente de produção moderno, priorizando a segurança e a separação de responsabilidades:
+
+* **Python + Flask:** Motor e estrutura baseada no padrão Application Factory, isolando rotas, modelos e lógica de testes.
+* **PostgreSQL + SQLAlchemy + Alembic:** Persistência relacional, integridade de dados e versionamento rastreável da base de dados através de migrações.
+* **Flask-JWT-Extended & Werkzeug:** Segurança stateless via tokens Bearer para autorização e criptografia hash de senhas de usuários.
+* **Marshmallow:** Sanitização de contratos e validação tipada estrita para entrada e saída de dados (JSON).
+* **Docker & Docker Compose:** Infraestrutura imutável orquestrando a API e o banco de dados em uma rede privada.
+* **Pytest & python-dotenv:** Qualidade e CI isolado (`tests/`, `conftest.py`, `pytest.ini`) com injeção declarativa de configurações.
 
 ## Funcionalidades
 
-- **[NOVO]** Autenticação e autorização gerando tokens de acesso (JWT).
-- **[NOVO]** Cadastro de usuários com senhas criptografadas (hash via Werkzeug).
-- **[NOVO]** Serialização e validação robusta de entrada/saída de dados usando Marshmallow.
-- **[NOVO]** Bloqueio de inserção de produtos duplicados na base de dados.
-- Rotas de escrita (POST, PUT, DELETE) protegidas por token de acesso.
-- CRUD completo de **categorias** e **produtos**.
-- Bloqueio de exclusão de categoria se houver produtos vinculados.
-- Impedimento de criação/atualização de produto com `categoria_id` inexistente.
+* **Autenticação:** Geração de tokens de acesso (Login/Registro) e senhas protegidas.
+* **Segurança de Escrita:** Rotas de modificação (POST, PUT, DELETE) bloqueadas para usuários não autenticados.
+* **Gestão de Estoque:** CRUD completo de **Categorias** e **Produtos**.
+* **Regras de Negócio Blindadas:**
+  * Bloqueio estrito de inserção de produtos duplicados.
+  * Impedimento de exclusão de categoria se houver produtos vinculados a ela.
+  * Bloqueio de criação ou atualização de produto referenciando uma categoria inexistente.
 
-## Decisões de Engenharia e Regras de Negócio
+## Desafios Superados e Roadmap
 
-Para garantir que o sistema escale sem inconsistências, a arquitetura atual baseia-se nas seguintes decisões:
+### Desafios Superados (v2.6.0)
+* **Application Factory:** A transição do núcleo do sistema para este padrão resolveu problemas críticos de importação circular e isolou as configurações.
+* **Separação de Preocupações (SoC):** Isolamento total da infraestrutura de testes (`tests/`) do código de produção (`app/`), garantindo um ambiente de QA blindado sem poluir a aplicação.
 
-* **Segurança e Identificação (JWT):** Implementação de endpoints de autenticação, restringindo alterações no estoque apenas a usuários autorizados (evitando manipulações indevidas).
-* **Validação de Contratos (Marshmallow):** A substituição dos antigos métodos `to_dict` manuais pelos esquemas do Marshmallow simplificou os modelos e garantiu maior segurança e tipagem no recebimento e envio de JSONs.
-* **Versionamento de Banco (Migrations):** Adoção de migrações estruturais (Flask-Migrate/Alembic) para gerenciar alterações nas tabelas de forma segura e rastreável.
-* **Infraestrutura Imutável (Docker):** O ambiente de desenvolvimento e produção é idêntico. O uso do `docker-compose` garante que a API e o banco de dados subam juntos e configurados.
-* **Segurança de Credenciais:** As chaves e senhas não ficam hardcoded. O sistema consome variáveis de ambiente injetadas por um arquivo `.env`.
+### Próximos Passos (Backlog)
+* **Documentação OpenAPI:** Integrar Swagger/Flasgger para documentar os endpoints e seus contratos dinamicamente.
+* **Paginação e Filtros:** Implementar paginação nas rotas `GET` de produtos para suportar alta volumetria de dados no futuro.
+* **RBAC (Controle de Acesso):** Criar níveis de permissão, separando perfil de "Administradores" (poder total de alteração) e "Usuários" (apenas leitura ou acesso restrito).
+* **Fluxo de Caixa:** Criar novas rotas para registrar a saída (venda) de produtos, baixando o estoque automaticamente e registrando o faturamento diário.
+* **Pipeline CI/CD:** Configurar GitHub Actions para executar a verificação de código e os testes automaticamente a cada novo *Pull Request*.
+* **Desenvolvimento da Interface (Front-End):** Construção da interface gráfica de usuário (UI) estruturada em HTML, CSS e JavaScript para consumir os endpoints da API, substituindo o uso de ferramentas de teste por telas funcionais para a operação diária.
+* **Controle de Idempotência:** Implementação de chaves de idempotência (Idempotency Keys) nas rotas de criação (POST), garantindo que requisições duplicadas por falhas de rede não gerem registros inconsistentes na base de dados.
 
-## Por que esta Stack?
+## Como rodar o projeto localmente
 
-* **Python + Flask:** Mantidos pela rapidez na prototipagem de rotas RESTful e flexibilidade arquitetural.
-* **SQLAlchemy & PostgreSQL:** Agilidade na modelagem de dados e integridade em um SGBD de mercado.
-* **Flask-JWT-Extended & Werkzeug:** Ferramentas consolidadas para geração de tokens de acesso e hash de senhas.
-* **Marshmallow:** Biblioteca agnóstica e poderosa para validação e serialização de objetos complexos.
-* **Docker & Docker Compose:** Escolhidos para orquestrar a infraestrutura em uma rede isolada.
-* **Pytest (Testes Automatizados):** Suíte de testes (com injeção de tokens fictícios) que assegura que refatorações não quebrem as regras de negócio.
+> **Pré-requisitos:** É obrigatório ter o **Docker** e o **Docker Compose** instalados na sua máquina.
 
-## Aprendizados e Próximos Passos
-
-### O que aprendi nesta jornada
-
-* **Conteinerização e Orquestração (Docker & Docker Compose):** Padronização completa do ambiente de desenvolvimento e produção, garantindo isolamento da API e do banco de dados em uma rede privada.
-* **Persistência Relacional Escalável (PostgreSQL & SQLAlchemy):** Transição de uma base local SQLite para um SGBD de mercado de alta performance, capaz de lidar com alta concorrência e requisições simultâneas mantendo a integridade dos dados.
-* **Validação Tipada e Tratamento de Erros (Marshmallow):** Substituição de validações manuais por schemas estruturados de serialização e desserialização, garantindo sanitização de entrada/saída e tratamento de erros padronizado.
-* **Segurança e Autenticação (JWT & Werkzeug):** Implementação de controle de acesso stateless via tokens Bearer JWT e proteção de credenciais com criptografia hash de senhas.
-
-### Próximos Passos (Roadmap)
-
-1. **Arquitetura Application Factory:** Refatorar o motor do sistema para o padrão de fábrica de aplicações (`create_app()`). Essa evolução arquitetural isolará a inicialização do Flask, resolvendo gargalos de importação e permitindo criar diretórios dedicados (`app/` e `tests/`). Isso garantirá total isolamento entre o banco de dados de produção e o ambiente de testes automatizados.
-2. **Desenvolvimento do Front-End:** Desenvolver a interface gráfica de usuário (UI) utilizando HTML, CSS e JavaScript para consumir esta API REST. O objetivo é substituir o uso de clientes de API (como o Postman) por telas intuitivas, entregando uma plataforma com alta usabilidade para a gestão de estoque pelos administradores da lan house.
-
-## Tecnologias
-
-- Python 3 / Flask
-- PostgreSQL / SQLAlchemy
-- Flask-JWT-Extended / Werkzeug Security
-- Marshmallow
-- Docker / Docker Compose
-- Pytest
-
----
-
-## 🚀 Como rodar o projeto (V2.5)
-
-> **BREAKING CHANGE:** A versão 2.5 exige a configuração de uma chave JWT. É obrigatório ter o **Docker** e o **Docker Compose** instalados na sua máquina.
-
-1. Clone o repositório e entre na pasta
+1. Clone o repositório e acesse a pasta:
    ```bash
    git clone <url-do-seu-repo>
    cd <pasta-do-projeto>
    ```
 
-2. Configure as variáveis de ambiente
+2. Configure o ambiente de variáveis:
    ```bash
    cp .env.example .env
+   # Abra o arquivo .env e preencha as credenciais do banco e a sua JWT_SECRET_KEY
    ```
-   > Abra o arquivo .env recém-criado e preencha com as senhas desejadas (este arquivo está protegido pelo .gitignore e não subirá para o GitHub).
 
-3. Suba a infraestrutura completa com o Docker
+3. Suba os contêineres:
    ```bash
-   docker-compose up --build
+   docker-compose up -d --build
    ```
-   > O Docker fará o download do PostgreSQL, compilará a imagem da API e conectará os dois. A API estará disponível em http://127.0.0.1:5000.
+   > O Docker compilará a imagem. A API estará disponível em `http://127.0.0.1:5000`.
 
-## Rodando os testes
-
-Como a aplicação agora roda dentro de um contêiner, você deve disparar o Pytest por dentro da rede do Docker:
+**Para rodar a suíte de testes (Pytest):**
 ```bash
-docker exec taciana_api python -m pytest
+docker exec taciana_api pytest
 ```
 
-## Endpoints
+## Endpoints Principais
 
-### Autenticação
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | /auth/registro | Cadastra um novo usuário no sistema |
-| POST | /auth/login | Autentica o usuário e retorna o Token JWT (Bearer) |
-
-### Categorias
-| Método | Rota | Descrição | Seguramça
+| Método | Rota | Descrição | Segurança |
 |--------|------|-----------|-----------|
-| GET | /categorias | Lista todas as categorias | Livre
-| GET | /categorias/\<id\> | Busca uma categoria por id | Livre
-| POST | /categorias | Cria uma categoria | 🔒 Requer JWT
-| PUT | /categorias/\<id\> | Atualiza uma categoria | 🔒 Requer JWT
-| DELETE | /categorias/\<id\> | Remove uma categoria (se vazia) | 🔒 Requer JWT
+| POST | `/auth/login` | Autentica usuário e retorna Token | Livre |
+| GET | `/produtos` | Lista todos os produtos | Livre |
+| POST | `/produtos` | Cadastra um novo produto | 🔒 Requer JWT |
+| PUT | `/produtos/<id>` | Atualiza dados de um produto | 🔒 Requer JWT |
+| DELETE | `/produtos/<id>` | Remove um produto do estoque | 🔒 Requer JWT |
 
-### Produtos
-| Método | Rota | Descrição | Seguramça
-|--------|------|-----------|-----------|
-| GET | /produtos | Lista todos os produtos | Livre
-| GET | /produtos/\<id\> | Busca um produto por id | Livre
-| POST | /produtos | Cria um produto | 🔒 Requer JWT
-| PUT | /produtos/\<id\> | Atualiza um produto | 🔒 Requer JWT
-| DELETE | /produtos/\<id\> | Remove um produto | 🔒 Requer JWT
+*(As rotas de `/categorias` seguem o mesmo padrão de segurança e nomenclatura).*
 
-## Estrutura do projeto
+## Estrutura do Projeto
 
 ```bash
+├── app/                     # Núcleo da Aplicação (Application Factory)
+│   ├── __init__.py          # Fábrica (create_app)
+│   ├── models/              # Entidades, Schemas e Database
+│   └── routes/              # Blueprints de rotas
+├── tests/                   # Infraestrutura de testes
+│   ├── conftest.py          # Fixtures e configurações do Pytest
+│   └── test_api.py          # Casos de teste automatizados
 ├── migrations/              # Arquivos de migração do banco de dados (Alembic)
-├── models/
-│   ├── database.py          # Configuração do SQLAlchemy
-│   ├── schemas.py           # Validações e serialização (Marshmallow)
-│   ├── categoria.py         # Entidade Categoria
-│   ├── produto.py           # Entidade Produto
-│   └── usuario.py           # Entidade Usuário (Senhas criptografadas)
-├── routes/                  # Arquivos de rotas isoladas
-│   ├── categorias.py
-│   ├── produtos.py
-│   └── usuarios.py
+├── config.py                # Gerenciador de configurações (python-dotenv)
+├── run.py                   # Ponto de entrada leve da aplicação
+├── pytest.ini               # Configuração declarativa de mapeamento de testes
 ├── .env.example             # Template de variáveis de ambiente
 ├── .gitignore               # Ignora .env, venv, caches
 ├── .dockerignore            # Otimização da imagem Docker
-├── app.py                   # Motor da aplicação e inicialização
 ├── docker-compose.yml       # Orquestração (API + PostgreSQL)
 ├── Dockerfile               # Receita da imagem da API
-├── requirements.txt         # Dependências do Python (incluindo JWT, Marshmallow)
-└── test_app.py              # Suíte de testes (Pytest) com injeção de tokens
-```
+└── requirements.txt         # Dependências do ecossistema Python
+``
