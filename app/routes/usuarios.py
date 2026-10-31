@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from models.database import db
-from models.usuario import Usuario
-from models.schemas import UsuarioSchema
+from app.models.database import db
+from app.models.usuario import Usuario
+from app.models.schemas import UsuarioSchema
 from marshmallow import ValidationError
 from flask_jwt_extended import create_access_token
 

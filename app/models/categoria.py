@@ -1,4 +1,4 @@
-from models.database import db
+from app.models.database import db
 from flask import jsonify
 
 class Categoria(db.Model):
