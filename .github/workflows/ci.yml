@@ -1,0 +1,35 @@
+name: PI - Teste do Sistema da Lan House
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs: 
+  test:
+    name: Carregar sistema
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Subir infraestrutura
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        run: docker compose up -d --build
+      
+      - name: Esperar o tempo de inicialização dos serviços
+        run: |
+          sleep 10
+          docker compose ps
+      
+      - name: Rodando testes
+        run: docker exec taciana_api pytest
+
+      - name: Desligar infraestrutura e destruir os volumes
+        run: docker compose down -v
