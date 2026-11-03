@@ -39,8 +39,14 @@ def login():
 
     usuario = Usuario.query.filter_by(username=dados_validados['username']).first()
  
-    if not usuario and not usuario.check_password(dados_validados['password']):
-        return jsonify({"erro":"Credenciais inválidadas"}), 401
+    if not usuario or not usuario.check_password(dados_validados['password']):
+        return jsonify({"erro":"Credenciais inválidas"}), 401
 
-    token = create_access_token(identity=str(usuario.id))
-    return jsonify({"acess_token": token}), 200
+    token = create_access_token(
+        identity=str(usuario.id),
+        additional_claims={"role": usuario.role}
+        )
+    return jsonify({
+        "access_token": token,
+        "role": usuario.role
+        }), 200

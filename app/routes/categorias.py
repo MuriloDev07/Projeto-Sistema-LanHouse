@@ -4,7 +4,7 @@ from app.models.categoria import Categoria
 from app.models.produto import Produto
 from app.models.schemas import CategoriaSchema
 from marshmallow import ValidationError
-from flask_jwt_extended import jwt_required
+from app.decorator import admin_required
 
 categorias_bp = Blueprint('categorias', __name__, url_prefix='/categorias')
 
@@ -26,7 +26,7 @@ def get_categoria_por_id(categoria_id):
     return jsonify({"erro": "Categoria não encontrada"}), 404
 
 @categorias_bp.route('', methods=['POST'])
-@jwt_required()
+@admin_required()
 def create_categoria():
     dados = request.get_json()
 
@@ -41,7 +41,7 @@ def create_categoria():
     return categoria_schema.dump(nova_categoria), 201
 
 @categorias_bp.route('/<int:categoria_id>', methods=['DELETE'])
-@jwt_required()
+@admin_required()
 def remove_categoria(categoria_id):
     categoria = db.session.get(Categoria, categoria_id)
 
@@ -58,7 +58,7 @@ def remove_categoria(categoria_id):
     return jsonify(mensagem = "Categoria removida com sucesso")
 
 @categorias_bp.route('/<int:categoria_id>', methods=["PUT"])
-@jwt_required()
+@admin_required()
 def update_categoria(categoria_id):
     dados = request.get_json()
     categoria = db.session.get(Categoria, categoria_id)

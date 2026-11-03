@@ -4,7 +4,7 @@ from app.models.categoria import Categoria
 from app.models.produto import Produto
 from app.models.schemas import ProdutoSchema
 from marshmallow import ValidationError
-from flask_jwt_extended import jwt_required
+from app.decorator import admin_required
 
 produtos_bp = Blueprint('produtos', __name__, url_prefix='/produtos')
 
@@ -26,7 +26,7 @@ def get_produto_por_id(produto_id):
     return jsonify({"erro": "Produto não encontrada"}), 404
 
 @produtos_bp.route('', methods=['POST'])
-@jwt_required()
+@admin_required()
 def create_produto():
     dados = request.get_json()
 
@@ -56,7 +56,7 @@ def create_produto():
     return produto_schema.dump(novo_produto), 201
 
 @produtos_bp.route('/<int:produto_id>', methods=['DELETE'])
-@jwt_required()
+@admin_required()
 def remove_produto(produto_id):
     produto = db.session.get(Produto, produto_id)
 
@@ -66,10 +66,10 @@ def remove_produto(produto_id):
     db.session.delete(produto)
     db.session.commit()
 
-    return jsonify(mensagem = "Produto removido com sucesso")
+    return jsonify({"mensagem": "Produto removido com sucesso"}), 200
 
 @produtos_bp.route('/<int:produto_id>', methods=['PUT'])
-@jwt_required()
+@admin_required()
 def update_produto(produto_id):
     dados = request.get_json()
     produto = db.session.get(Produto, produto_id)

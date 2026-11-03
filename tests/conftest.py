@@ -1,12 +1,19 @@
 import pytest
 from app import create_app
 from app.models.database import db
+from app.models.usuario import Usuario
 from flask_jwt_extended import create_access_token
 
-app = create_app()
+@pytest.fixture
+def app():
+    _app = create_app()
+    _app.config['TESTING'] = True
+    _app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    _app.config['JWT_CONFIG_KEY'] = 'chave-secreta-de-testes-automatizados-123'
+    return _app
 
 @pytest.fixture
-def client():
+def client(app):
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['JWT_SECRET_KEY'] = 'chave-secreta-de-testes-automatizados-123'
@@ -19,8 +26,28 @@ def client():
             db.drop_all()
 
 @pytest.fixture
-def auth_headers():
+def usuario_admin(app):
     with app.app_context():
-        token = create_access_token(identity="1")
+        usuario = Usuario(username="admin_teste", role= "admin")
+        usuario.set_password("senha_segura_123")
+        db.session.add(usuario)
+        db.session.commit()
+        return usuario
+    
+@pytest.fixture
+def admin_auth_headers(app):
+    with app.app_context():
+        token = create_access_token(
+            identity="1",
+            additional_claims={"role": "admin"}
+        )
+        return {"Authorization": f"Bearer {token}"}
 
-    return {"Authorization": f"Bearer {token}"}
+@pytest.fixture
+def user_auth_headers(app):
+    with app.app_context():
+        token = create_access_token(
+            identity="2",
+            additional_claims={"role": "user"}
+        )
+        return {"Authorization": f"Bearer {token}"}
