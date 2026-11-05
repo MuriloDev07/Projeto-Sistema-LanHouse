@@ -9,7 +9,8 @@ def test_sucess_login(client, usuario_admin):
     resposta = client.post('auth/login', json=dados_login)
 
     assert resposta.status_code == 200
-    assert "access_token" in resposta.get_json()
+    assert resposta.get_json()["msg"] == "Login realizado com sucesso"
+    assert "access_token_cookie" in resposta.headers.get("Set-Cookie", "")
 
 def test_invalid_login(client):
     """

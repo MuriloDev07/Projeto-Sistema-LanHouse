@@ -1,6 +1,6 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, unset_access_cookies
 from app.models.database import db
 
 jwt = JWTManager()
@@ -14,7 +14,16 @@ def create_app():
     jwt.init_app(app)
 
     from app.models import categoria, produto, usuario
-    migrate.init_app(app)
+    migrate.init_app(app, db)
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        response = jsonify({
+            "erro": "token_expired",
+            "mensagem": "Sua sessão expirou. Por favor, faça login novamente."
+        })
+        unset_access_cookies(response)
+        return response, 401
 
     from app.routes.categorias import categorias_bp
     from app.routes.produtos import produtos_bp

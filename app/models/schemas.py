@@ -43,3 +43,4 @@ class UsuarioSchema(Schema):
         load_only=True,
         error_messages={"required": "O campo 'senha' é obrigatório."}
     )
+    role = fields.String(dump_only=True)

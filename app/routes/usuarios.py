@@ -3,7 +3,7 @@ from app.models.database import db
 from app.models.usuario import Usuario
 from app.models.schemas import UsuarioSchema
 from marshmallow import ValidationError
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required, unset_access_cookies
 
 usuarios_bp = Blueprint('usuarios', __name__, url_prefix='/auth')
 usuario_schema = UsuarioSchema()
@@ -46,7 +46,18 @@ def login():
         identity=str(usuario.id),
         additional_claims={"role": usuario.role}
         )
-    return jsonify({
-        "access_token": token,
-        "role": usuario.role
-        }), 200
+    response = jsonify({
+        "msg": "Login realizado com sucesso",
+        "user": usuario.username
+    })
+
+    set_access_cookies(response, token)
+    
+    return response, 200
+
+@usuarios_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    response = jsonify({"msg": "Logout realizado com sucesso!"})
+    unset_access_cookies(response)
+    return response, 200
