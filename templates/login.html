@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center mt-5">
+    <div class="col-md-4">
+        <!-- Cartão do Bootstrap -->
+        <div class="card shadow border-0 rounded-3">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0 fw-bold">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Acesso ao Sistema
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                
+                <div id="alertMessage" class="alert d-none" role="alert"></div>
+                <!-- Formulário enviando os dados para a rota da API -->
+                <form id="loginForm">
+                
+                    <!-- Campo de Usuário -->
+                    <div class="mb-3">
+                        <label for="username" class="form-label font-monospace fs-6">Usuário</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Seu usuário" required>
+                        </div>
+                    </div>
+
+                    <!-- Campo de Senha -->
+                    <div class="mb-4">
+                        <label for="password" class="form-label font-monospace fs-6">Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Sua senha" required>
+                        </div>
+                    </div>
+
+                    <!-- Botão de Entrar -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                            Entrar
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(event) {
+    // 1. Evita que o formulário recarregue a página da forma tradicional
+    event.preventDefault();
+
+    const usernameInput = document.getElementById('username').value;
+    const passwordInput = document.getElementById('password').value;
+    const alertBox = document.getElementById('alertMessage');
+
+    try {
+        // 2. Envia os dados como JSON para a rota da API
+        const response = await fetch('/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: usernameInput,
+                password: passwordInput
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // 3. Login com sucesso: redireciona para a página principal/dashboard
+            window.location.href = '/dashboard';
+        } else {
+            // 4. Exibe a mensagem de erro retornada pela API no alerta do Bootstrap
+            alertBox.className = 'alert alert-danger';
+            alertBox.innerText = data.erro || 'Erro ao realizar login.';
+            alertBox.classList.remove('d-none');
+        }
+    } catch (error) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.innerText = 'Erro de conexão com o servidor.';
+        alertBox.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %}

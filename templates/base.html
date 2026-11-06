@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Lan House</title>
+
+    <!-- Bootstrap 5 CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Ícones do Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <!-- Barra de Navegação (Navbar) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-pc-display me-2"></i>Taciana Lan House
+            </a>
+        </div>
+    </nav>
+
+    <!-- Container Principal -->
+    <main class="container flex-grow-1">
+        <!-- Bloco Opcional para Mensagens de Alerta (Flashes) -->
+        {% block alerts %}{% endblock %}
+
+        <!-- Bloco Principal das Páginas Filhas -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Rodapé Fixo no Fim da Página -->
+    <footer class="bg-white text-center text-muted py-3 border-top mt-auto">
+        <div class="container">
+            <small>Sistema Lan House &copy; Taciana Variedades</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Bloco opcional para scripts específicos das páginas filhas -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
