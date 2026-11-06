@@ -34,6 +34,9 @@ def create_categoria():
         dados_validados = categoria_schema.load(dados)
     except ValidationError as err:
         return jsonify(err.messages), 400
+
+    if Categoria.query.filter_by(nome=dados_validados['nome']).first():
+        return jsonify({"erro": "Categoria já cadastrada"}), 400
     
     nova_categoria = Categoria(nome=dados_validados['nome'])
     db.session.add(nova_categoria)

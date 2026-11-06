@@ -14,3 +14,11 @@ def dashboard_page():
     except Exception:
         return redirect((url_for('views.login_page')))
     return render_template('dashboard.html')
+
+@views_bp.route('/view/categorias', methods=['GET'])
+def categorias_page():
+    try:
+        verify_jwt_in_request(locations=['cookies'])
+    except Exception:
+        return redirect(url_for('views.login_page'))
+    return render_template('categorias.html')
