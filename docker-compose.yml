@@ -31,6 +31,20 @@ services:
     networks:
       - taciana_net
 
+  redis:
+    image: redis:7-alpine
+    container_name: taciana_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - taciana_net
+
 volumes:
   pgdata:
 
