@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, jsonify, request
 from app.models.database import db
 from app.models.categoria import Categoria
@@ -5,17 +6,33 @@ from app.models.produto import Produto
 from app.models.schemas import ProdutoSchema
 from marshmallow import ValidationError
 from app.decorator import admin_required
+from app.cache import redis_client
 
 produtos_bp = Blueprint('produtos', __name__, url_prefix='/produtos')
 
 produto_schema = ProdutoSchema()
 produtos_schema = ProdutoSchema(many=True)
 
+CACHE_KEY_PRODUTOS = 'produtos:all'
+
 @produtos_bp.route('', methods=['GET'])
 def get_produtos():
+    try:
+        cached_data = redis_client.get(CACHE_KEY_PRODUTOS)
+        if cached_data:
+            return jsonify(mensagem="Lista de Produtos (Cache)", produtos=json.loads(cached_data)), 200
+    except Exception as e:
+        print(f"Erro ao consultar Redis: {e}")
+
     produtos = Produto.query.all()
     resultado = produtos_schema.dump(produtos)
-    return jsonify(mensagem="Lista de Produtos", produtos=resultado)
+
+    try:
+        redis_client.setex(CACHE_KEY_PRODUTOS, 3600, json.dumps(resultado))
+    except Exception as e:
+        print(f"Erro ao guardar no Redis: {e}")
+
+    return jsonify(mensagem="Lista de Produtos (Banco)", produtos=resultado)
 
 @produtos_bp.route('/<int:produto_id>', methods=['GET'])
 def get_produto_por_id(produto_id):
@@ -53,6 +70,11 @@ def create_produto():
     db.session.add(novo_produto)
     db.session.commit()
 
+    try:
+        redis_client.delete(CACHE_KEY_PRODUTOS)
+    except Exception as e:
+        print(f"Erro ao invalidar o cache no Redis: {e}")
+
     return produto_schema.dump(novo_produto), 201
 
 @produtos_bp.route('/<int:produto_id>', methods=['DELETE'])
@@ -65,6 +87,11 @@ def remove_produto(produto_id):
 
     db.session.delete(produto)
     db.session.commit()
+
+    try:
+        redis_client.delete(CACHE_KEY_PRODUTOS)
+    except Exception as e:
+        print(f"Erro ao invalidar o cache no Redis: {e}")
 
     return jsonify({"mensagem": "Produto removido com sucesso"}), 200
 
@@ -91,5 +118,10 @@ def update_produto(produto_id):
     produto.quantidade = dados_validados['quantidade']
     produto.categoria_id = dados_validados['categoria_id']
     db.session.commit()
+
+    try:
+        redis_client.delete(CACHE_KEY_PRODUTOS)
+    except Exception as e:
+        print(f"Erro ao invalidar o cache no Redis: {e}")
 
     return jsonify(mensagem="Produto atualizado com sucesso", produto = produto_schema.dump(produto))
