@@ -1,0 +1,80 @@
+Cria um novo produto das categorias
+---
+tags:
+  - Produtos
+security:
+  - CookieAuth: []
+parameters:
+  - name: body
+    in: body
+    required: true
+    description: Dados para criação do produto
+    schema:
+      type: object
+      required: 
+        - nome
+        - preco
+        - quantidade
+        - categoria_id
+      properties:
+        nome:
+          type: string
+          example: "Cabo de Carregador"
+        preco:
+          type: number
+          format: float
+          example: 15.00
+        quantidade:
+          type: integer
+          example: 15
+        categoria_id:
+          type: integer
+          example: 2
+responses:
+  201: 
+    description: Produto criado com sucesso
+    schema:
+      type: object
+      properties: 
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: "Cabo de Carregador"
+        preco:
+          type: number
+          format: float
+          example: 15.00
+        quantidade:
+          type: integer
+          example: 15
+        categoria_id:
+          type: integer
+          example: 2
+  400:
+    description: Erro de validação ou produto duplicado
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Produto já cadastrado"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  404:
+    description: Categoria não encontrada no banco
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Categoria não encontrada"
+  500:
+    description: Erro interno no servidor

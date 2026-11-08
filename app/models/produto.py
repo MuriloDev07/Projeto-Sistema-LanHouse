@@ -1,5 +1,4 @@
 from app.models.database import db
-from flask import jsonify
 
 class Produto(db.Model):
     __tablename__ = 'produtos'

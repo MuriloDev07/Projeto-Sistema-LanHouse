@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
+from flasgger import swag_from
 from app.models.database import db
 from app.models.usuario import Usuario
 from app.models.schemas import UsuarioSchema
@@ -9,15 +10,18 @@ usuarios_bp = Blueprint('usuarios', __name__, url_prefix='/auth')
 usuario_schema = UsuarioSchema()
 
 @usuarios_bp.route('/registro', methods=['POST'])
+@swag_from("../docs/usuarios/registrar.yml")
 def registrar():
     dados = request.get_json()
 
     try:
         dados_validados = usuario_schema.load(dados)
     except ValidationError as err:
+        current_app.logger.warning(f"Falha de validação ao realizar o registro: {err.messages}")
         return jsonify(err.messages), 400
 
     if Usuario.query.filter_by(username=dados_validados['username']).first():
+        current_app.logger.warning(f"Tentativa de registrar usuário duplicado: '{dados_validados['username']}'")
         return jsonify({"erro": "Usuário já cadastrado"}), 400
 
     novo_usuario = Usuario(username=dados_validados['username'])
@@ -26,20 +30,25 @@ def registrar():
     db.session.add(novo_usuario)
     db.session.commit()
 
+    current_app.logger.info(f"Usuário '{novo_usuario}' (ID: {novo_usuario.id}) registrado com sucesso no PostgreSQL")
+
     return jsonify(usuario_schema.dump(novo_usuario)), 201
 
 @usuarios_bp.route('/login', methods=['POST'])
+@swag_from("../docs/usuarios/login.yml")
 def login():
     dados = request.get_json()
 
     try:
         dados_validados = usuario_schema.load(dados)
     except ValidationError as err:
+        current_app.logger.warning(f"Falha de validação ao relizar login: {err.messages}")
         return jsonify(err.messages), 400
 
     usuario = Usuario.query.filter_by(username=dados_validados['username']).first()
  
     if not usuario or not usuario.check_password(dados_validados['password']):
+        current_app.logger.error(f"Falha na checagem das credenciais: Usuário ou Senha inválidos.")
         return jsonify({"erro":"Credenciais inválidas"}), 401
 
     token = create_access_token(
@@ -52,12 +61,18 @@ def login():
     })
 
     set_access_cookies(response, token)
+
+    current_app.logger.info(f"Usuário '{usuario.username}' logado com sucesso.")
     
     return response, 200
 
 @usuarios_bp.route('/logout', methods=['POST'])
 @jwt_required()
+@swag_from("../docs/usuarios/logout.yml")
 def logout():
     response = jsonify({"msg": "Logout realizado com sucesso!"})
     unset_access_cookies(response)
+
+    current_app.logger.info("Logout (Deleção de cookies) realizado com sucesso.")
+
     return response, 200

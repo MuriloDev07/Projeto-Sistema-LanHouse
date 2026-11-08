@@ -1,0 +1,39 @@
+Remove um produto das categorias
+---
+tags:
+  - Produtos
+security:
+  - CookieAuth: []
+parameters:
+  - name: produto_id
+    in: path
+    type: integer
+    required: true
+    description: ID numérico do produto cadastrado no PostgreSQL
+responses:
+  200:
+    description: Produto removido com sucesso do banco
+    schema:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Produto removido com sucesso"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  404:
+    description: Produto não encontrado no banco
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Produto não encontrado"
+  500:
+    description: Erro interno no servidor

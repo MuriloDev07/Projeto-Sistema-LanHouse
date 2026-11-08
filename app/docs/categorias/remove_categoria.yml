@@ -1,0 +1,47 @@
+Remove uma categoria de produtos
+---
+tags:
+  - Categorias
+security:
+  - CookieAuth: []
+parameters:
+  - name: categoria_id
+    in: path
+    type: integer
+    required: true
+    description: ID numérico da categoria cadastrada no PostgreSQL
+responses:
+  200:
+    description: Categoria removida com sucesso do banco
+    schema:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Categoria removida com sucesso"
+  400:
+    description: Categoria está sendo usada no banco
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Categoria está sendo usada"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  404:
+    description: Categoria não encontrada no banco
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Categoria não encontrada"
+  500:
+    description: Erro interno no servidor

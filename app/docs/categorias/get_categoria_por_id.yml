@@ -1,0 +1,32 @@
+Busca uma categoria específica pelo seu ID
+---
+tags:
+  - Categorias
+parameters:
+  - name: categoria_id
+    in: path
+    type: integer
+    required: true
+    description: ID numérico da categoria cadastrada no PostgreSQL
+responses:
+  200:
+    description: Categoria retornada com sucesso
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: "Papelaria"
+  404:
+    description: Categoria não encontrada no banco de dados
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Categoria não encontrada"
+  500:
+    description: Erro interno no servidor

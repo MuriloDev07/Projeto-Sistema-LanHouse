@@ -1,0 +1,43 @@
+Autentica um usuário e gera o token de acesso JWT via Cookie
+---
+tags:
+  - Autenticação
+parameters:
+  - name: body
+    in: body
+    required: true
+    description: Credenciais de acesso do usuário
+    schema:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "novo_usuario"
+        password:
+          type: string
+          example: "123456"
+responses:
+  200:
+    description: Autenticação realizada com sucesso (seta cookie de acesso JWT)
+    schema:
+      type: object
+      properties: 
+        msg:
+          type: string
+          example: "Login realizado com sucesso"
+        user:
+          type: string
+          example: "novo_usuario"
+  401:
+    description: Credenciais inválidas (usuário ou senha incorretos)
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Credenciais inválidas"
+  500:
+    description: Erro interno no servidor

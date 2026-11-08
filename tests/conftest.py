@@ -2,6 +2,7 @@ import pytest
 from app import create_app
 from app.models.database import db
 from app.models.usuario import Usuario
+from app.core.cache import redis_client
 from flask_jwt_extended import create_access_token
 
 @pytest.fixture
@@ -51,3 +52,12 @@ def user_auth_headers(app):
             additional_claims={"role": "user"}
         )
         return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture(autouse=True)
+def clean_redis():
+    """Garante que o banco em memória do Redis seja limpo antes de cada teste."""
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+    yield
