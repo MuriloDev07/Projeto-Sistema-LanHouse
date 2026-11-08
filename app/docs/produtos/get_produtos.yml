@@ -1,0 +1,36 @@
+Lista todos os produtos das categorias
+---
+tags:
+  - Produtos
+responses:
+  200:
+    description: Lista de produtos retornada com sucesso (via Redis Cache ou PostgreSQL)
+    schema:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Lista de produtos (Cache)"
+        produtos:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              nome: 
+                type: string
+                example: "Carregador"
+              preco:
+                type: number
+                format: float
+                example: 25.00
+              quantidade:
+                type: integer
+                example: 15
+              categoria_id:
+                type: integer
+                example: 2
+  500:
+    description: Erro interno no servidor

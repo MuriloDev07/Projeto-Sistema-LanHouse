@@ -1,0 +1,46 @@
+Registra um novo usuário no sistema
+---
+tags:
+  - Autenticação
+parameters:
+  - name: body
+    in: body
+    required: true
+    description: Dados para criação da conta de usuário
+    schema:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "novo_usuario"
+        password:
+          type: string
+          example: "123456"
+responses:
+  201:
+    description: Usuário criado com sucesso
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "novo_usuario"
+        role:
+          type: string
+          example: "user"
+  400:
+    description: Erro de validação ou usuário duplicado
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Usuário já cadastrado"
+  500:
+    description: Erro interno no servidor

@@ -1,0 +1,68 @@
+Atualiza uma categoria de produtos
+---
+tags:
+  - Categorias
+security:
+  - CookieAuth: []
+parameters:
+  - name: categoria_id
+    in: path
+    type: integer
+    required: true
+    description: ID numérico da categoria cadastrada no PostgreSQL
+  - name: body
+    in: body
+    required: true
+    description: Dados para atualização da categoria
+    schema:
+      type: object
+      required: 
+        - nome
+      properties:
+        nome:
+          type: string
+          example: "Eletrônicos"
+responses:
+  200:
+    description: Categoria atualizada com sucesso no banco
+    schema:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Categoria atualizada com sucesso"
+        categoria:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            nome:
+              type: string
+              example: "Eletrônicos"
+  400:
+    description: Erro de validação
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Falha na validação ao atualizar Categoria ID"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  404:
+    description: Categoria não encontrada no banco
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Categoria não encontrada"
+  500:
+    description: Erro interno no servidor

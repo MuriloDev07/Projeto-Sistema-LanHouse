@@ -1,0 +1,49 @@
+Cria uma nova categoria de produtos
+---
+tags:
+  - Categorias
+security:
+  - CookieAuth: []
+parameters:
+  - name: body
+    in: body
+    required: true
+    description: Dados para criação da categoria
+    schema:
+      type: object
+      required: 
+        - nome
+      properties:
+        nome:
+          type: string
+          example: "Papelaria"
+responses:
+  201: 
+    description: Categoria criada com sucesso
+    schema:
+      type: object
+      properties: 
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: "Papelaria"
+  400:
+    description: Erro de validação ou categoria duplicada
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Categoria já cadastrada"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  500:
+    description: Erro interno no servidor

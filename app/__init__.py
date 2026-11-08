@@ -2,6 +2,9 @@ from flask import Flask, jsonify
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, unset_access_cookies
 from app.models.database import db
+from app.core.logging_config import configure_logging
+from app.core.swagger_config import init_swagger
+from app.decorators import register_jwt_handlers
 
 jwt = JWTManager()
 migrate = Migrate()
@@ -12,18 +15,13 @@ def create_app():
 
     db.init_app(app)
     jwt.init_app(app)
+    register_jwt_handlers(jwt)
 
     from app.models import categoria, produto, usuario
     migrate.init_app(app, db)
 
-    @jwt.expired_token_loader
-    def expired_token_callback(jwt_header, jwt_payload):
-        response = jsonify({
-            "erro": "token_expired",
-            "mensagem": "Sua sessão expirou. Por favor, faça login novamente."
-        })
-        unset_access_cookies(response)
-        return response, 401
+    configure_logging(app)
+    init_swagger(app)
 
     from app.routes.categorias import categorias_bp
     from app.routes.produtos import produtos_bp

@@ -1,0 +1,91 @@
+Atualiza um produto das categorias
+---
+tags:
+  - Produtos
+security:
+  - CookieAuth: []
+parameters:
+  - name: produto_id
+    in: path
+    type: integer
+    required: true
+    description: ID numérico do produto cadastrado no PostgreSQL
+  - name: body
+    in: body
+    required: true
+    description: Dados para atualização do produto
+    schema:
+      type: object
+      required: 
+        - nome
+        - preco
+        - quantidade
+        - categoria_id
+      properties:
+        nome:
+          type: string
+          example: "Fone de Ouvido de Fio"
+        preco:
+          type: number
+          format: float
+          example: 10.00
+        quantidade:
+          type: integer
+          example: 15
+        categoria_id:
+          type: integer
+          example: 2
+responses:
+  200:
+    description: Produto atualizado com sucesso no banco
+    schema:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Produto atualizado com sucesso"
+        produto:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            nome:
+              type: string
+              example: "Fone de Ouvido de Fio"
+            preco:
+              type: number
+              format: float
+              example: 10.00
+            quantidade:
+              type: integer
+              example: 15
+            categoria_id:
+              type: integer
+              example: 2
+  400:
+    description: Erro de validação
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Falha na validação ao atualizar Categoria ID"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  404:
+    description: Produto não encontrado no banco
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Produto não encontrado"
+  500:
+    description: Erro interno no servidor

@@ -1,0 +1,25 @@
+Realiza o logout do usuário limpando os cookies de sessão JWT
+---
+tags:
+  - Autenticação
+security:
+  - CookieAuth: []
+responses:
+  200:
+    description: Logout realizado com sucesso (cookie revogado)
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Logout realizado com sucesso!"
+  401:
+    description: Token JWT ausente ou inválido
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  500:
+    description: Erro interno no servidor
