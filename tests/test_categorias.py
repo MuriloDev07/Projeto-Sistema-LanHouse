@@ -1,3 +1,4 @@
+import pytest
 from app.core.cache import redis_client
 from app.routes.categorias import CACHE_KEY_CATEGORIAS
 
@@ -68,3 +69,18 @@ def test_cache_hit_and_invalidation(client, admin_auth_headers):
     post_res = client.post('/categorias', json=nova_cat, headers=admin_auth_headers)
     assert post_res.status_code == 201
     assert redis_client.exists(CACHE_KEY_CATEGORIAS) == 0
+
+@pytest.mark.parametrize(
+    "campo, valor_invalido",
+    [
+        ("nome", ""),
+        ("nome", "A"),
+    ]
+)
+def test_create_categoria_payload_invalido(client, admin_auth_headers, campo, valor_invalido):
+    nova_categoria = {"nome": "Papelaria"}
+
+    nova_categoria[campo] = valor_invalido
+    response = client.post('/categorias', json=nova_categoria, headers=admin_auth_headers)
+    assert response.status_code == 400
+    assert campo in response.get_json()

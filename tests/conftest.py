@@ -27,6 +27,11 @@ def client(app):
             db.drop_all()
 
 @pytest.fixture
+def categoria_id(client, admin_auth_headers):
+    categoria = client.post('/categorias', json={'nome': 'Eletrônicos'}, headers=admin_auth_headers)
+    return categoria.get_json()['id']
+
+@pytest.fixture
 def usuario_admin(app):
     with app.app_context():
         usuario = Usuario(username="admin_teste", role= "admin")

@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields, validate
+from decimal import Decimal
 
 class CategoriaSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -15,15 +16,22 @@ class ProdutoSchema(Schema):
         validate=validate.Length(min=2),
         error_messages={"required":" O campo 'nome' é obrigatório."}
     )
-    preco = fields.Float(
+    preco = fields.Decimal(
+        as_string=True,
         required=True,
-        validate=validate.Range(min=0),
-        error_messages={"erro": "O preco não pode ser negativo."}
+        validate=validate.Range(
+            min=Decimal("0.01"),
+            error="O preço deve ser maior que zero."
+        ),
+        error_messages={"required": "O campo 'preco' é obrigatório."}
     )
     quantidade = fields.Int(
         required=True,
-        validate=validate.Range(min=0),
-        error_messages={"erro": "A quantidade não pode ser negativa."}
+        validate=validate.Range(
+            min=0,
+            error="A quantidade não pode ser negativa."
+        ),
+        error_messages={"required": "O campo 'quantidade' é obrigatório."}
     )
     categoria_id = fields.Int(
         required=True,

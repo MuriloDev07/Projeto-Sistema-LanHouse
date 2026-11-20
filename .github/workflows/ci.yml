@@ -23,11 +23,6 @@ jobs:
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         run: docker compose up -d --build
       
-      - name: Esperar o tempo de inicialização dos serviços
-        run: |
-          sleep 10
-          docker compose ps
-      
       - name: Rodando testes
         run: docker exec taciana_api pytest
 

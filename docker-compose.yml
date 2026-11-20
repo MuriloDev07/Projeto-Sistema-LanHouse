@@ -16,11 +16,28 @@ services:
     networks:
       - taciana_net
 
+  redis:
+    image: redis:7-alpine
+    container_name: taciana_redis
+    restart: always
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - taciana_net
+
   api:
     build: .
     container_name: taciana_api
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@banco_dados:5432/${DB_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "5000:5000"
     volumes:
@@ -28,20 +45,8 @@ services:
     depends_on:
       banco_dados:
         condition: service_healthy
-    networks:
-      - taciana_net
-
-  redis:
-    image: redis:7-alpine
-    container_name: taciana_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      redis:
+        condition: service_healthy
     networks:
       - taciana_net
 
