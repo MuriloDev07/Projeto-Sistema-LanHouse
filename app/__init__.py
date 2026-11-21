@@ -17,7 +17,7 @@ def create_app():
 
     cors.init_app(
         app,
-        origins=['http://127.0.0.1:3000', 'http://localhost:3000'],
+        origins=['http://127.0.0.1:3000', 'http://localhost:3000', 'http://localhost:5000'],
         supports_credentials=True
     )
 
@@ -34,9 +34,11 @@ def create_app():
     from app.routes.categorias import categorias_bp
     from app.routes.produtos import produtos_bp
     from app.routes.usuarios import usuarios_bp
+    from app.routes.web import web_bp
 
     app.register_blueprint(categorias_bp)
     app.register_blueprint(produtos_bp)
     app.register_blueprint(usuarios_bp)
+    app.register_blueprint(web_bp)
 
     return app
