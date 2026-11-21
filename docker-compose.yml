@@ -2,6 +2,7 @@ services:
   banco_dados:
     image: postgres:15-alpine
     container_name: taciana_db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -33,6 +34,7 @@ services:
   api:
     build: .
     container_name: taciana_api
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@banco_dados:5432/${DB_NAME}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
