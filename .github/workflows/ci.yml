@@ -28,3 +28,4 @@ jobs:
 
       - name: Desligar infraestrutura e destruir os volumes
         run: docker compose down -v
+        if: always()
