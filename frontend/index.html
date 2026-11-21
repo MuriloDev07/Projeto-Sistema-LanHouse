@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taciana Variedades - Estoque e Consulta</title>
+    <link rel="stylesheet" href="css/variable.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/modals.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar-content">
+            <div class="brand">
+                <span class="brand-badge">TV</span>
+                <div>
+                    <h1>Taciana Variedades</h1>
+                    <p>Consulta de Preços e Estoque</p>
+                </div>
+            </div>
+
+            <div class="topbar-actions">
+                <button id="btn-abrir-registro" class="btn btn-outline hidden">
+                    Novo Usuário
+                </button>
+                <button id="btn-abrir-categorias" class="btn btn-outline hidden">
+                    Categorias
+                </button>
+                <button id="btn-auth" class="btn btn-light">
+                    Entrar como Admin
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <section class="controls-bar">
+            <div class="search-box">
+                <input 
+                    type="search" 
+                    id="input-busca" 
+                    placeholder="Buscar produto pelo nome..." 
+                    autocomplete="off"
+                >
+            </div>
+            <button id="btn-novo-produto" class="btn btn-accent hidden">
+                + Novo Produto
+            </button>
+        </section>
+
+        <section class="filters-bar" id="lista-filtros" aria-label="Filtrar por categoria">
+            <button class="filter-pill active" data-categoria="todas">Todos</button>
+        </section>
+
+        <section class="products-section">
+            <div id="estado-carregamento" class="status-message">Carregando produtos...</div>
+            
+            <div class="table-wrapper" id="tabela-container">
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Categoria</th>
+                            <th>Preço</th>
+                            <th>Estoque</th>
+                            <th class="col-admin hidden">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-produtos">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="modal-login" class="modal">
+        <form id="form-login" class="modal-box">
+            <div class="modal-header">
+                <h2>Acesso Administrativo</h2>
+                <button type="button" class="btn-close" data-close="modal-login">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label for="login-username">Usuário</label>
+                <input type="text" id="login-username" required autocomplete="username">
+
+                <label for="login-password">Senha</label>
+                <input type="password" id="login-password" required autocomplete="current-password">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="modal-login">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Entrar</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="modal-produto" class="modal">
+        <form id="form-produto" class="modal-box">
+            <div class="modal-header">
+                <h2 id="titulo-modal-produto">Novo Produto</h2>
+                <button type="button" class="btn-close" data-close="modal-produto">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="produto-id">
+
+                <label for="produto-nome">Nome do Produto *</label>
+                <input type="text" id="produto-nome" required placeholder="Ex: Caderno Brochura 96 fls">
+
+                <label for="produto-categoria">Categoria *</label>
+                <select id="produto-categoria" required>
+                </select>
+
+                <div class="form-row">
+                    <div>
+                        <label for="produto-preco">Preço (R$) *</label>
+                        <input type="number" id="produto-preco" step="0.01" min="0" required placeholder="0.00">
+                    </div>
+                    <div>
+                        <label for="produto-quantidade">Quantidade *</label>
+                        <input type="number" id="produto-quantidade" step="1" min="0" required placeholder="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="modal-produto">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar Produto</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="modal-categorias" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Gerenciar Categorias</h2>
+                <button type="button" class="btn-close" data-close="modal-categorias">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-nova-categoria" class="inline-form">
+                    <input type="text" id="nova-categoria-nome" placeholder="Nome da nova categoria..." required>
+                    <button type="submit" class="btn btn-accent">Adicionar</button>
+                </form>
+
+                <ul id="lista-categorias-crud" class="category-list">
+                </ul>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="modal-registro" class="modal">
+    <form id="form-registro" class="modal-box">
+        <div class="modal-header">
+            <h2>Cadastrar Novo Usuário</h2>
+            <button type="button" class="btn-close" data-close="modal-registro">&times;</button>
+        </div>
+        <div class="modal-body">
+            <label for="reg-username">Nome de Usuário *</label>
+            <input type="text" id="reg-username" required autocomplete="off" placeholder="Ex: taciana">
+
+            <label for="reg-password">Senha *</label>
+            <input type="password" id="reg-password" required autocomplete="new-password">
+
+            <label for="reg-password-confirm">Confirmar Senha *</label>
+            <input type="password" id="reg-password-confirm" required autocomplete="new-password">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="modal-registro">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Criar Usuário</button>
+        </div>
+    </form>
+    </dialog>
+    
+    <div id="toast-container" class="toast-container"></div>
+
+    <script type="module" src="js/main.js"></script>
+    
+</body>
+</html>
