@@ -1,124 +1,93 @@
-# Sistema de Loja - Lan House (v3.1.0)
+# Sistema de Gestão - Taciana Variedades (v4.0.0)
 
-API REST conteinerizada para gerenciar o estoque da lan house 'Taciana Variedades'. Evoluída de um protótipo em SQLite para uma infraestrutura corporativa de alta performance, contando com PostgreSQL, Caching em Memória com Redis, precisão financeira exata, segurança robusta (JWT e RBAC via Cookies HTTP-Only), observabilidade, documentação OpenAPI/Swagger e suíte automatizada de 19 testes via Pytest.
+Aplicação web **Full-Stack conteinerizada** para gestão de estoque e consulta rápida de preços da lan house e loja **Taciana Variedades**. Evoluída de um protótipo de API em SQLite para uma arquitetura completa servida em origem única via Docker, integrando back-end de alta performance (Flask, PostgreSQL, Redis) com uma interface web responsiva (*mobile-first*) construída em HTML5, CSS3 modular e JavaScript ES Modules.
 
-## Contexto
+## Contexto e Evolução
 
-Projeto criado para gerenciar o estoque real da lan house 'Taciana Variedades'. Inicialmente construído com SQLite para consolidação de fundamentos, o sistema evoluiu para uma infraestrutura escalável com PostgreSQL e Docker.
+Projetado para atender à operação diária no balcão da **Taciana Variedades**, o sistema oferece aos operadores da loja uma interface rápida e intuitiva para consultar preços, acompanhar a disponibilidade em tempo real e gerenciar o cadastro de produtos e categorias durante o atendimento, além de permitir o controle de contas de acesso através de um painel administrativo protegido.
 
-Na **versão 3.1.0**, o projeto consolidou padrões avançados de engenharia de software e resiliência em produção:
-* **Integridade Financeira:** Migração dos valores monetários de `Float` para `Numeric(10, 2)` / `Decimal` com validação em dupla camada (Marshmallow + SQLAlchemy `@validates`).
-* **Transações Atômicas:** Criação do gerenciador de contexto `atomic_transaction()` garantindo *commit* e *rollback* automáticos em todas as operações de escrita.
-* **Abstração de Cache via Decorators:** Implementação dos decorators genéricos `@cache_aside` e `@invalidate_cache`, eliminando código repetido nas rotas e mantendo degradação graciosa se o Redis ficar indisponível.
-* **Hardening Docker & Testes de Resiliência:** Execução do container com usuário não-root (`appuser`), *healthchecks* completos e suíte Pytest expandida com testes parametrizados (`@pytest.mark.parametrize`) e simulação de falhas (`unittest.mock.patch`).
+Na **versão 4.0.0**, o projeto deu o salto de uma API pura para uma **aplicação Full-Stack unificada**:
+* **Entrega Unificada (Same-Origin):** O Flask entrega tanto os endpoints REST quanto a interface web na porta `5000` por meio de um Blueprint dedicado (`app/routes/web.py`), simplificando o deploy local e eliminando atritos de CORS com cookies `HttpOnly`.
+* **Interface Responsiva e Intuitiva:** Tabela adaptativa no desktop que se transforma automaticamente em cartões (*cards*) em dispositivos móveis, com busca instantânea, filtros dinâmicos por categoria e alertas visuais de estoque.
+* **Alta Disponibilidade Local:** Orquestração Docker Compose com *healthchecks* e política `restart: unless-stopped`, garantindo recuperação automática após reinicializações do computador do balcão.
 
-## Arquitetura e Tecnologias
+## Documentação Modular
 
-A stack foi projetada para simular um ambiente de produção moderno, priorizando separação de responsabilidades, performance e manutenibilidade:
+Para facilitar a navegação técnica, a documentação está dividida por camadas:
 
-* **Python 3.12 + Flask:** Motor base alinhado ao padrão *Application Factory*, isolando rotas, modelos e lógica de testes.
-* **Arquitetura Modularizada:** Divisão clara do núcleo em `app/core/` (configurações de cache, logging estruturado e Swagger) e `app/decorators/` (decorators genéricos de cache `@cache_aside`/`@invalidate_cache`, verificação de papéis RBAC e handlers JWT).
-* **PostgreSQL + SQLAlchemy + Alembic:** Persistência relacional com precisão decimal (`Numeric(10, 2)`), integridade transacional via `atomic_transaction()` e versionamento rastreável da base de dados através de migrações.
-* **Redis 7 (Alpine):** Armazenamento NoSQL em memória para caching com TTL de 3600s, abstraído por decorators reutilizáveis com invalidação automática nas rotas de escrita (`POST`, `PUT`, `DELETE`) e fallback defensivo para o PostgreSQL em caso de indisponibilidade.
-* **Flask-JWT-Extended & Werkzeug:** Segurança stateless via tokens injetados em cookies seguros `HttpOnly`, matriz RBAC (*Role-Based Access Control*) com claims adicionais e decoradores customizados (`@admin_required`).
-* **Flasgger (OpenAPI 2.0 / Swagger UI):** Documentação viva e interativa exposta em `/apidocs/` com suporte nativo a autorização via Cookies no navegador.
-* **Logging Centralizado (`logging`):** Sistema de rastreabilidade estruturada em padrão ISO 8601 para monitoramento de acessos, erros e eventos de cache.
-* **Marshmallow & Domain Validation:** Sanitização de contratos e validação tipada estrita (`Decimal`, regras de negócio e `@validates` no modelo).
-* **Docker & Docker Compose:** Orquestração de múltiplos serviços (`taciana_api`, `taciana_db`, `taciana_redis`) com *healthchecks* nativos (`pg_isready` e `redis-cli ping`), rede privada isolada (`taciana_net`) e execução com usuário não-root (`appuser`).
-* **GitHub Actions (CI/CD):** Esteira automatizada de integração contínua (Ubuntu Runner) executando a suíte Pytest com injeção de *secrets* a cada *push* ou *pull request*.
-* **Pytest & unittest.mock:** Suíte com **19 testes automatizados** modulares utilizando fixtures compartilhadas (`conftest.py`), parametrização de casos de borda (`@pytest.mark.parametrize`), mocks de falha de infraestrutura (`patch`) e reset de cache via `redis_client.flushdb()`.
+* 📘 **[Documentação do Back-end (`app/README.md`)](app/README.md):** Detalhes da *Application Factory*, precisão financeira (`Decimal`), transações atômicas, padrão *Cache-Aside* com Redis, benchmarking (ApacheBench), segurança RBAC/JWT e suíte de 29 testes Pytest.
+* 🎨 **[Documentação do Front-end (`frontend/README.md`)](frontend/README.md):** Arquitetura semântica HTML5, design system com CSS Variables, responsividade *mobile-first*, modais nativos (`<dialog>`) e separação de responsabilidades em ES Modules (`api.js`, `ui.js`, `main.js`).
 
-## Estudo de Caso & Benchmarking (ApacheBench)
+## Arquitetura e Stack Tecnológica
 
-Testes de carga sob concorrência (`ab -n 500 -c 10`) no endpoint `GET /categorias` comprovam a eficiência do padrão Cache-Aside:
+| Camada | Tecnologias e Padrões |
+| :--- | :--- |
+| **Front-end** | HTML5 Semântico, CSS3 Modular (Variables, Flexbox/Grid, Media Queries), Vanilla JavaScript (ES6+ Modules, Fetch API) |
+| **Back-end** | Python 3.12, Flask (*Application Factory* & Blueprints), Marshmallow, Flasgger (OpenAPI 2.0 / Swagger) |
+| **Persistência & Cache** | PostgreSQL 15 (`Numeric(10, 2)`), SQLAlchemy, Alembic, Redis 7 (`@cache_aside` e `@invalidate_cache`) |
+| **Segurança** | Flask-JWT-Extended via Cookies `HttpOnly`, RBAC (`@admin_required`), cadastro de operadores restrito a administradores |
+| **Infraestrutura & QA** | Docker, Docker Compose (`restart: unless-stopped`, usuário não-root `appuser`), GitHub Actions (CI), Pytest (29 testes) |
 
-| Métrica | Somente PostgreSQL (Baseline) | PostgreSQL + Redis (Cache-Aside) | Impacto / Otimização |
-| :--- | :---: | :---: | :---: |
-| **Vazão (Throughput)** | `255.29 req/sec` | `493.10 req/sec` | **+93.1%** 🚀 |
-| **Tempo Médio por Req.** | `39.172 ms` | `20.280 ms` | **-48.2%** ⚡ |
-| **Tempo Máximo (Worst-case)** | `218 ms` | `66 ms` | **-69.7%** 📉 |
+## Funcionalidades Principais
 
-## Funcionalidades
+* **Consulta Pública Ágil:** Pesquisa instantânea por nome, filtragem por categorias dinâmicas e sinalização semântica de estoque (**Disponível**, **Estoque Baixo** e **Esgotado**).
+* **Painel Administrativo Protegido:** Login via cookies seguros `HttpOnly` que desbloqueia controles de criação, edição e exclusão de produtos e categorias sem recarregar a página.
+* **Gestão de Operadores:** Cadastro de novas contas de acesso restrito exclusivamente a administradores já autenticados.
+* **Performance & Resiliência:** Leitura acelerada pelo Redis (+93.1% de vazão comprovada em benchmark) com fallback automático para o PostgreSQL em caso de indisponibilidade do cache.
 
-* **Autenticação & Sessão:** Login e registro com injeção de perfil (Admin vs User) via cookies HTTP-Only seguros.
-* **Controle de Acesso (RBAC):** Proteção estrita de rotas mutáveis (POST, PUT, DELETE) exclusivas para administradores via decorador `@admin_required`.
-* **Documentação Interativa:** Interface Swagger UI acessível publicamente para teste de todos os endpoints e schemas da API.
-* **Observabilidade:** Logs formatados gravados em stdout detalhando requisições, hits/misses de cache e falhas de autorização.
-* **Gestão de Estoque & Precisão Financeira:** CRUD completo de **Categorias** e **Produtos** utilizando `Decimal` / `Numeric(10, 2)` e cálculo encapsulado de patrimônio em estoque (`valor_total_estoque`).
-* **Cache-Aside Inteligente via Decorators:**
-  * Leitura acelerada via `@cache_aside` (`GET /categorias` e `GET /produtos`).
-  * Invalidação ativa e automática das chaves no Redis via `@invalidate_cache` apenas quando operações de escrita retornam sucesso (`200`/`201`).
-  * Resiliência de infraestrutura com fallback automático para o PostgreSQL caso o Redis fique offline.
-* **Regras de Negócio & Integridade ACID:**
-  * Transações atômicas com rollback automático em caso de falha (`atomic_transaction`).
-  * Bloqueio de valores monetários nulos/negativos e quantidades negativas tanto no schema quanto no domínio.
-  * Bloqueio de inserção de produtos duplicados, exclusão de categoria com produtos vinculados e associação com categorias inexistentes.
+## Como Rodar o Projeto Localmente
 
-## Desafios Superados e Roadmap
+> **Pré-requisitos:** Ter o **Docker** e o **Docker Compose** instalados na máquina.
 
-### Desafios Superados (v3.1.0 e Anteriores)
-* **Integridade Financeira, Decorators de Cache e Hardening (v3.1.0):**
-  * Migração de `preco` para `Numeric(10, 2)` via Alembic com validação dupla (`Marshmallow` + `@validates`) e property `valor_total_estoque`.
-  * Criação do context manager `atomic_transaction()` para garantir atomicidade nas escritas.
-  * Desacoplamento da lógica de cache com `@cache_aside` e `@invalidate_cache`, eliminando duplicação de código nas rotas.
-  * Expansão da suíte Pytest para **19 testes** com `@pytest.mark.parametrize` e `unittest.mock.patch` simulando Redis offline.
-  * Aplicação do princípio do menor privilégio no `Dockerfile` (`appuser`) e *healthchecks* completos no `docker-compose.yml`.
-* **Refatoração Modular e Observabilidade (v3.0.0):** Criação dos pacotes `app/core/` e `app/decorators/`, padronização de logs ISO 8601 e modernização das chamadas do Redis client.
-* **Documentação Swagger & Flasgger (v3.0.0):** Integração OpenAPI 2.0 modularizada via arquivos YAML externos em `app/docs/` com suporte a autenticação por cookies.
-* **Testes Integrados de Cache (v3.0.0):** Validação empírica das etapas de Cache MISS, Cache HIT e Invalidação com isolamento via `flushdb()`.
-* **PoC de Caching e Otimização NoSQL (v2.9.0):** Integração do container `taciana_redis` e aplicação do padrão Cache-Aside.
-* **RBAC e Decoradores Customizados (v2.8.0):** Autorização baseada em papéis inspecionando claims JWT em tempo de execução.
-* **Pipeline de CI/CD e Healthchecks (v2.7.0):** Validação automatizada no GitHub Actions e orquestração Docker Compose.
-
-### Próximos Passos (Backlog)
-* **Paginação e Filtros:** Implementar paginação nas rotas `GET` de produtos e categorias para suportar alta volumetria de dados.
-* **Taxa de Limite de Requisições (Rate Limiting):** Proteger a API contra ataques de força bruta e DDoS utilizando Flask-Limiter com armazenamento no Redis.
-* **Interface Gráfica (Front-End):** Desenvolver um painel web interativo (React / Vue.js) para consumo das rotas da API.
-
-## Como rodar o projeto localmente
-
-> **Pré-requisitos:** É obrigatório ter o **Docker** e o **Docker Compose** instalados na sua máquina.
-
-1. Clone o repositório e acesse a pasta:
+1. **Clone o repositório e acesse a pasta:**
    ```bash
    git clone https://github.com/MuriloDev07/Projeto-Sistema-LanHouse.git
    cd Projeto-Sistema-LanHouse
    ```
 
-2. Configure o ambiente de variáveis:
+2. **Configure as variáveis de ambiente:**
    ```bash
    cp .env.example .env
-   # Preencha as credenciais do banco de dados e a sua JWT_SECRET_KEY
+   # Edite o .env definindo DB_USER, DB_PASSWORD, DB_NAME e JWT_SECRET_KEY
    ```
 
-3. Suba os contêineres e aplique as migrações:
+3. **Suba os contêineres:**
    ```bash
    docker compose up -d --build
-   docker exec -it taciana_api flask db upgrade
    ```
-   > A API estará disponível em `http://127.0.0.1:5000`.
-   > A Documentação Swagger UI estará disponível em `http://127.0.0.1:5000/apidocs/`.
 
-**Para rodar a suíte de testes (Pytest) manualmente:**
-```bash
-docker exec taciana_api pytest -v
-```
+4. **Inicialize o banco de dados e crie o primeiro administrador:**
+   ```bash
+   docker compose exec api flask db upgrade
+   # Caso ainda não existam revisões na pasta migrations/versions, crie as tabelas e o admin via shell:
+   docker compose exec api flask shell
+   ```
+   ```python
+   from app.models.database import db
+   from app.models.usuario import Usuario
+   db.create_all()
+   admin = Usuario(username="admin", role="admin")
+   admin.set_password("sua_senha_segura")
+   db.session.add(admin)
+   db.session.commit()
+   exit()
+   ```
 
-## Endpoints Principais
+5. **Acesse a aplicação:**
+   * **Interface Web (Loja):** `http://localhost:5000`
+   * **Documentação Interativa da API (Swagger):** `http://localhost:5000/apidocs/`
 
-| Método | Rota | Descrição | Segurança | Cache |
-|--------|------|-----------|-----------|-------|
-| POST | `/auth/registro` | Cadastra novo usuário na plataforma | Livre | N/A |
-| POST | `/auth/login` | Autentica usuário, valida role e retorna Cookie JWT | Livre | N/A |
-| POST | `/auth/logout` | Revoga a sessão e remove o cookie JWT | 🔒 Autenticado | N/A |
-| GET | `/produtos` | Lista todos os produtos | Livre | ⚡ `@cache_aside` (1h TTL) |
-| POST | `/produtos` | Cadastra um novo produto | 🔒 Admin JWT | 🧹 `@invalidate_cache` |
-| PUT | `/produtos/<id>` | Atualiza dados de um produto | 🔒 Admin JWT | 🧹 `@invalidate_cache` |
-| DELETE | `/produtos/<id>` | Remove um produto do estoque | 🔒 Admin JWT | 🧹 `@invalidate_cache` |
-| GET | `/categorias` | Lista todas as categorias | Livre | ⚡ `@cache_aside` (1h TTL) |
-| POST | `/categorias` | Cadastra uma nova categoria | 🔒 Admin JWT | 🧹 `@invalidate_cache` |
-| PUT | `/categorias/<id>` | Atualiza uma categoria existente | 🔒 Admin JWT | 🧹 `@invalidate_cache` |
-| DELETE | `/categorias/<id>` | Remove uma categoria | 🔒 Admin JWT | 🧹 `@invalidate_cache` |
+## Desafios Superados e Roadmap
+
+### Desafios Superados
+* **v4.0.0 — Interface Web, Unificação Full-Stack & QA:** Desenvolvimento de front-end responsivo em HTML5/CSS3/JS modular para operação no balcão, integração via Blueprint `web` (`/assets`) na mesma origem da API, expansão da suíte Pytest para **29 testes automatizados** (incluindo validação parametrizada da entrega da interface), configuração de alta disponibilidade (`restart: unless-stopped`) no Docker Compose e garantia de teardown no CI (`if: always()`).
+* **v3.1.0 — Integridade Financeira, Cache Decorators & Hardening:** Migração monetária para `Numeric(10, 2)`, transações atômicas (`atomic_transaction()`), abstração `@cache_aside`/`@invalidate_cache`, container com usuário não-root (`appuser`) e suíte de 19 testes automatizados com mocks de falha.
+* **v3.0.0 — Modularização & Observabilidade:** Criação de `app/core/` e `app/decorators/`, logs ISO 8601 e Swagger modularizado em YAML.
+
+### Próximos Passos (Roadmap)
+* **Módulo de Serviços:** Implementar cadastro e tabela de preços para serviços da lan house (impressões, xerox, digitalizações e manutenções).
+* **Evolução para E-commerce (React):** Migrar e expandir a interface web para React visando transformar o sistema em uma vitrine virtual completa com carrinho e pedidos online.
+* **Paginação & Rate Limiting:** Adicionar paginação nos endpoints `GET` e proteção contra abuso de requisições com Flask-Limiter + Redis.
 
 ## Estrutura do Projeto
 
@@ -126,43 +95,29 @@ docker exec taciana_api pytest -v
 ├── .github/                  # Automação e Integração Contínua
 │   └── workflows/
 │       └── ci.yml            # Esteira de CI (GitHub Actions)
-├── app/                      # Núcleo da Aplicação (Application Factory)
+├── app/                      # Back-end Flask (Application Factory)
+│   ├── README.md             # Documentação técnica detalhada da API
 │   ├── __init__.py           # Fábrica de inicialização (create_app)
-│   ├── core/                 # Módulos de Infraestrutura e Serviços Core
-│   │   ├── cache.py          # Conexão e cliente Redis NoSQL
-│   │   ├── logging_config.py # Centralizador de logs formatados em ISO 8601
-│   │   └── swagger.py        # Configuração e rotas do Flasgger / Swagger UI
-│   ├── decorators/           # Decoradores e Manipuladores de Exceção
-│   │   ├── auth.py           # Matriz RBAC (@admin_required)
-│   │   ├── cache.py          # Decoradores genéricos (@cache_aside e @invalidate_cache)
-│   │   └── jwt_handlers.py   # Callbacks de expiração e erros de token JWT
+│   ├── core/                 # Cache Redis, Logging ISO 8601 e Swagger
+│   ├── decorators/           # RBAC (@admin_required), Cache e Handlers JWT
 │   ├── docs/                 # Especificações OpenAPI 2.0 (YAML)
-│   │   ├── auth/             # Schemas de autenticação
-│   │   ├── categorias/       # Schemas das rotas de categoria
-│   │   └── produtos/         # Schemas das rotas de produto
-│   ├── models/               # Entidades SQLAlchemy, Schemas Marshmallow e DB
-│   │   ├── categoria.py
-│   │   ├── database.py       # Instância SQLAlchemy e context manager atomic_transaction
-│   │   ├── produto.py        # Modelo Produto com Numeric(10,2) e @validates
-│   │   ├── schemas.py        # Validação estrita com Marshmallow Decimal
-│   │   └── usuario.py
-│   └── routes/               # Blueprints de rotas da API
-│       ├── auth.py
+│   ├── models/               # Entidades SQLAlchemy e Schemas Marshmallow
+│   └── routes/               # Blueprints da API e interface web
 │       ├── categorias.py
-│       └── produtos.py
-├── tests/                    # Suíte de testes modulares e integrados (Pytest - 19 testes)
-│   ├── conftest.py           # Fixtures compartilhadas, SQLite em memória e reset do Redis
-│   ├── test_auth.py          # Testes de autenticação e RBAC
-│   ├── test_categorias.py    # Testes integrados, parametrizados e de Cache para categorias
-│   └── test_produtos.py      # Testes integrados, parametrizados, Cache e Mock Redis offline
-├── migrations/               # Arquivos de migração do banco de dados (Alembic)
-├── config.py                 # Gerenciador de configurações (python-dotenv)
-├── run.py                    # Ponto de entrada leve da aplicação
-├── pytest.ini                # Configuração declarativa de mapeamento e cache de testes
-├── .env.example              # Template de variáveis de ambiente
-├── .gitignore                # Ignora .env, venv, caches
-├── .dockerignore             # Otimização da imagem Docker
-├── docker-compose.yml        # Orquestração (API + PostgreSQL + Redis com Healthchecks)
-├── Dockerfile                # Receita segura da imagem da API (usuário não-root appuser)
-└── requirements.txt          # Dependências do ecossistema Python (Flask, Redis, SQLAlchemy...)
+│       ├── produtos.py
+│       ├── usuarios.py
+│       └── web.py            # Blueprint de entrega do front-end (/) e /assets
+├── frontend/                 # Interface Web Responsiva (HTML5/CSS3/ES Modules)
+│   ├── README.md             # Documentação de arquitetura e UI/UX do front-end
+│   ├── index.html            # Estrutura semântica e modais nativos (<dialog>)
+│   ├── css/                  # Estilos modulares (variables, layout, modals)
+│   ├── images/               # Identidade visual (logotipo e favicon)
+│   └── js/                   # Lógica modularizada (api.js, ui.js, main.js)
+├── tests/                    # Suíte Pytest (29 testes unitários e integrados)
+├── migrations/               # Histórico de migrações Alembic
+├── config.py                 # Configurações centralizadas via variáveis de ambiente
+├── run.py                    # Ponto de entrada da aplicação
+├── docker-compose.yml        # Orquestração (API + PostgreSQL + Redis)
+├── Dockerfile                # Imagem segura com usuário não-root (appuser)
+└── requirements.txt          # Dependências Python
 ```

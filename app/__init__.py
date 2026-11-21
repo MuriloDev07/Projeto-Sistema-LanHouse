@@ -5,13 +5,21 @@ from app.models.database import db
 from app.core.logging_config import configure_logging
 from app.core.swagger_config import init_swagger
 from app.decorators import register_jwt_handlers
+from flask_cors import CORS
 
 jwt = JWTManager()
 migrate = Migrate()
+cors = CORS()
 
 def create_app():
     app = Flask("Taciana Lanhouse")
     app.config.from_object('config.Config')
+
+    cors.init_app(
+        app,
+        origins=['http://127.0.0.1:3000', 'http://localhost:3000', 'http://localhost:5000'],
+        supports_credentials=True
+    )
 
     db.init_app(app)
     jwt.init_app(app)
@@ -26,9 +34,11 @@ def create_app():
     from app.routes.categorias import categorias_bp
     from app.routes.produtos import produtos_bp
     from app.routes.usuarios import usuarios_bp
+    from app.routes.web import web_bp
 
     app.register_blueprint(categorias_bp)
     app.register_blueprint(produtos_bp)
     app.register_blueprint(usuarios_bp)
+    app.register_blueprint(web_bp)
 
     return app
