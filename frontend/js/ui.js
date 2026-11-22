@@ -11,25 +11,28 @@ export const ui = {
         }, 3500);
     },
 
-    setAdminMode(isAdmin, username = '') {
+    setAdminMode(isAdmin, username = '', abaAtiva = 'produtos') {
         const btnAuth = document.getElementById('btn-auth');
         const btnCategorias = document.getElementById('btn-abrir-categorias');
         const btnRegistro = document.getElementById('btn-abrir-registro');
         const btnNovoProduto = document.getElementById('btn-novo-produto');
-        const colAdmin = document.querySelector('.col-admin');
+        const btnNovoServico = document.getElementById('btn-novo-servico');
+        const colsAdmin = document.querySelectorAll('.col-admin');
 
         if (isAdmin) {
             btnAuth.textContent = `Sair (${username})`;
             btnCategorias.classList.remove('hidden');
             btnRegistro.classList.remove('hidden');
-            btnNovoProduto.classList.remove('hidden');
-            colAdmin.classList.remove('hidden');
+            btnNovoProduto.classList.toggle('hidden', abaAtiva !== 'produtos');
+            btnNovoServico.classList.toggle('hidden', abaAtiva !== 'servicos');
+            colsAdmin.forEach(col => col.classList.remove('hidden'));
         } else {
             btnAuth.textContent = 'Entrar como Admin';
             btnCategorias.classList.add('hidden');
             btnRegistro.classList.add('hidden');
             btnNovoProduto.classList.add('hidden');
-            colAdmin.classList.add('hidden');
+            btnNovoServico.classList.add('hidden');
+            colsAdmin.forEach(col => col.classList.add('hidden'));
         }
     },
 
@@ -120,6 +123,68 @@ export const ui = {
                             Editar
                         </button>
                         <button type="button" class="btn btn-danger btn-sm" data-del-prod="${prod.id}" data-nome="${prod.nome}">
+                            Excluir
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    },
+
+    renderGruposServicos(servicos, grupoAtivo) {
+        const filtersBar = document.getElementById('lista-filtros-servicos');
+        const gruposBase = ['Impressões', 'Documentos', 'Detran', 'Boletos'];
+        const gruposExtras = servicos.map(s => s.grupo).filter(g => !gruposBase.includes(g));
+        const todosGrupos = [...gruposBase, ...new Set(gruposExtras)];
+
+        filtersBar.innerHTML = `
+            <button class="filter-pill ${grupoAtivo === 'todos' ? 'active' : ''}" data-grupo="todos">
+                Todos
+            </button>
+        `;
+        todosGrupos.forEach(grupo => {
+            const isActive = grupo === grupoAtivo ? 'active' : '';
+            filtersBar.innerHTML += `
+                <button class="filter-pill ${isActive}" data-grupo="${grupo}">
+                    ${grupo}
+                </button>
+            `;
+        });
+    },
+
+    renderServicos(servicos, isAdmin) {
+        const tbody = document.getElementById('lista-servicos');
+        const statusMsg = document.getElementById('estado-carregamento-servicos');
+
+        if (servicos.length === 0) {
+            tbody.innerHTML = '';
+            statusMsg.textContent = 'Nenhum serviço encontrado.';
+            statusMsg.classList.remove('hidden');
+            return;
+        }
+
+        statusMsg.classList.add('hidden');
+        tbody.innerHTML = '';
+
+        servicos.forEach(serv => {
+            const precoFormatado = Number(serv.preco).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${serv.nome}</td>
+                <td data-label="Grupo">${serv.grupo}</td>
+                <td data-label="Preço" class="price-cell">${precoFormatado}</td>
+                <td data-label="Observação">${serv.observacao || '—'}</td>
+                <td data-label="Ações" class="${isAdmin ? '' : 'hidden'}">
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" class="btn btn-secondary btn-sm" data-edit-serv="${serv.id}">
+                            Editar
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" data-del-serv="${serv.id}" data-nome="${serv.nome}">
                             Excluir
                         </button>
                     </div>

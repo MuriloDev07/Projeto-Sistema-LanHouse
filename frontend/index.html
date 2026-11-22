@@ -35,6 +35,10 @@
     </header>
     
     <main class="container">
+        <nav class="tabs-bar" aria-label="Alternar entre Produtos e Serviços">
+        <button type="button" class="tab-btn active" data-tab="produtos">Produtos</button>
+        <button type="button" class="tab-btn" data-tab="servicos">Serviços</button>
+        </nav>
         <section class="controls-bar">
             <div class="search-box">
                 <input 
@@ -44,6 +48,9 @@
                     autocomplete="off"
                 >
             </div>
+            <button id="btn-novo-servico" class="btn btn-accent hidden">
+                + Novo Serviço
+            </button>
             <button id="btn-novo-produto" class="btn btn-accent hidden">
                 + Novo Produto
             </button>
@@ -71,6 +78,29 @@
                     </tbody>
                 </table>
             </div>
+        </section>
+
+        <section id="secao-servicos" class="hidden">
+        <div class="filters-bar" id="lista-filtros-servicos" aria-label="Filtrar por grupo de serviço">
+            <button class="filter-pill active" data-grupo="todos">Todos</button>
+        </div>
+
+        <div id="estado-carregamento-servicos" class="status-message hidden"></div>
+
+        <div class="table-wrapper">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Serviço</th>
+                        <th>Grupo</th>
+                        <th>Preço</th>
+                        <th>Observação</th>
+                        <th class="col-admin hidden">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-servicos"></tbody>
+            </table>
+        </div>
         </section>
     </main>
 
@@ -164,6 +194,45 @@
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-close="modal-registro">Cancelar</button>
             <button type="submit" class="btn btn-primary">Criar Usuário</button>
+        </div>
+    </form>
+    </dialog>
+
+    <dialog id="modal-servico" class="modal">
+    <form id="form-servico" class="modal-box">
+        <div class="modal-header">
+            <h2 id="titulo-modal-servico">Novo Serviço</h2>
+            <button type="button" class="btn-close" data-close="modal-servico">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="servico-id">
+
+            <label for="servico-nome">Nome do Serviço *</label>
+            <input type="text" id="servico-nome" required placeholder="Ex: Impressão P&B">
+
+            <div class="form-row">
+                <div>
+                    <label for="servico-grupo">Grupo *</label>
+                    <select id="servico-grupo" required>
+                        <option value="">Selecione um grupo...</option>
+                        <option value="Impressões">Impressões</option>
+                        <option value="Documentos">Documentos</option>
+                        <option value="Detran">Detran</option>
+                        <option value="Boletos">Boletos</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="servico-preco">Preço (R$) *</label>
+                    <input type="number" id="servico-preco" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+            </div>
+
+            <label for="servico-observacao">Observação (opcional)</label>
+            <input type="text" id="servico-observacao" placeholder="Ex: Valor por folha">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close="modal-servico">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar Serviço</button>
         </div>
     </form>
     </dialog>

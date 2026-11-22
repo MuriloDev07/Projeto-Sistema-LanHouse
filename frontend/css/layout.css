@@ -22,7 +22,6 @@ body {
     padding: 0 16px;
 }
 
-/* Cabeçalho */
 .topbar {
     background-color: var(--color-primary);
     color: #FFFFFF;
@@ -93,6 +92,35 @@ body {
 .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.5); color: #FFFFFF; }
 .btn-danger  { background-color: #EF4444; color: #FFFFFF; }
 .btn-sm      { min-height: 36px; padding: 0 12px; font-size: 0.85rem; }
+
+.tabs-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--color-primary);
+}
+
+.tab-btn.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
 
 .controls-bar {
     display: flex;

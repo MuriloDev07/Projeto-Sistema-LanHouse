@@ -69,5 +69,16 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(produto)
     }),
-    deleteProduto: (id) => request(`/produtos/${id}`, { method: 'DELETE' })
+    deleteProduto: (id) => request(`/produtos/${id}`, { method: 'DELETE' }),
+
+    getServicos: () => request('/servicos'),
+    createServico: (servico) => request('/servicos', {
+        method: 'POST',
+        body: JSON.stringify(servico)
+    }),
+    updateServico: (id, servico) => request(`/servicos/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(servico)
+    }),
+    deleteServico: (id) => request(`/servicos/${id}`, {method: 'DELETE'})
 };
