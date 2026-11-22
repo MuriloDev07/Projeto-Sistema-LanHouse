@@ -65,7 +65,7 @@ def remove_categoria(categoria_id):
     categoria = db.session.get(Categoria, categoria_id)
 
     if categoria is None:
-        current_app.logger.warning(f"Tentativa de exclusão falho: Categoria ID {categoria_id} não existe")
+        current_app.logger.warning(f"Tentativa de exclusão falha: Categoria ID {categoria_id} não existe")
         return jsonify({"erro": "Categoria não encontrada"}), 404
 
     produto_existente = Produto.query.filter_by(categoria_id=categoria_id).first()
@@ -89,7 +89,7 @@ def update_categoria(categoria_id):
     categoria = db.session.get(Categoria, categoria_id)
 
     if categoria is None:
-        current_app.logger.warning(f"Tentativa de atualização falho: Categoria ID {categoria_id} não existe")
+        current_app.logger.warning(f"Tentativa de atualização falha: Categoria ID {categoria_id} não existe")
         return jsonify({"erro": "Categoria não encontrada"}), 404
 
     try:

@@ -18,7 +18,7 @@ def test_create_produto_com_categoria_valida(client, categoria_id, admin_auth_he
 
 def test_create_produto_como_usuario_comum(client, categoria_id, user_auth_headers):
     """
-    Usuário Comum é impedido de criar categoria (HTTP 403).
+    Usuário Comum é impedido de criar produto (HTTP 403).
     """
     dados = {
             "nome": "Pendrive 8GB",

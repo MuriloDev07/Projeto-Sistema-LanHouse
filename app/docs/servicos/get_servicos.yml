@@ -1,0 +1,36 @@
+Lista todos os servicos
+---
+tags:
+  - Servicos
+responses:
+  200:
+    description: Lista de servicos retornada com sucesso (via Redis Cache ou PostgreSQL)
+    schema:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Lista de servicos (Cache)"
+        servicos:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+              nome: 
+                type: string
+                example: "Impressão"
+              grupo:
+                type: string
+                example: "Impressões"
+              preco:
+                type: string
+                example: "1.00"
+              observacao:
+                type: string
+                nullable: true
+                example: "Valor por folha"
+  500:
+    description: Erro interno no servidor

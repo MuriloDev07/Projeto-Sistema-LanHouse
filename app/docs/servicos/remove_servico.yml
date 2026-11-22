@@ -1,0 +1,39 @@
+Remove um servico
+---
+tags:
+  - Servicos
+security:
+  - CookieAuth: []
+parameters:
+  - name: servico_id
+    in: path
+    type: integer
+    required: true
+    description: ID numérico do servico cadastrado no PostgreSQL
+responses:
+  200:
+    description: Servico removido com sucesso do banco
+    schema:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Servico removido com sucesso"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  404:
+    description: Servico não encontrado no banco
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Servico não encontrado"
+  500:
+    description: Erro interno no servidor

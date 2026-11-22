@@ -1,0 +1,71 @@
+Cria um novo servico
+---
+tags:
+  - Servicos
+security:
+  - CookieAuth: []
+parameters:
+  - name: body
+    in: body
+    required: true
+    description: Dados para criação do servico
+    schema:
+      type: object
+      required: 
+        - nome
+        - grupo
+        - preco
+      properties:
+        nome:
+          type: string
+          example: "Licenciamento"
+        grupo:
+          type: string
+          example: 'Detran'
+        preco:
+          type: string
+          example: "3.00"
+        observacao:
+          type: string
+          description: "Informação opcional sobre o atendimento ou cobrança"
+          example: "Valor por folha"
+responses:
+  201: 
+    description: Servico criado com sucesso
+    schema:
+      type: object
+      properties: 
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: "Licenciamento"
+        preco:
+          type: string
+          example: "3.00"
+        grupo:
+          type: string
+          example: "Detran"
+        observacao:
+          type: string
+          nullable: true
+          example: "Valor por folha"
+  400:
+    description: Erro de validação ou servico duplicado
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Servico já cadastrado"
+  401:
+    description: Token JWT ausente ou não autorizado
+    schema:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: "Missing Authorization Header"
+  500:
+    description: Erro interno no servidor

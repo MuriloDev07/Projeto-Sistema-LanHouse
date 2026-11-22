@@ -1,0 +1,42 @@
+Busca um servico específico pelo seu ID
+---
+tags:
+  - Servicos
+parameters:
+  - name: servico_id
+    in: path
+    type: integer
+    required: true
+    description: ID numérico do servico cadastrado no PostgreSQL
+responses:
+  200:
+    description: Servico retornado com sucesso
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: "Xerox"
+        grupo:
+          type: string
+          example: "Impressões"
+        preco:
+          type: string
+          example: "0.50"
+        observacao:
+          type: string
+          nullable: true
+          example: "Valor por folha"
+  404:
+    description: Servico não encontrado no banco de dados
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Servico não encontrado"
+  500:
+    description: Erro interno no servidor

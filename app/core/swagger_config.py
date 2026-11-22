@@ -5,7 +5,7 @@ swagger_template = {
     "info": {
         "title": "API Taciana Lan House",
         "description": "Documentação oficial dos endpoints REST do sistema de gestão da Lan House Taciana Variedades. Inclui autenticação JWT via Cookies HTTP-Only, persistência PostgreSQL e cache em memória com Redis.",
-        "version": "3.0.0",
+        "version": "4.0.0",
         "contact": {
             "name": "Murilo Costa Nascimento",
             "email": "murilodev07@gmail.com"
@@ -14,7 +14,7 @@ swagger_template = {
     "securityDefinitions": {
         "CookieAuth": {
             "type": "apiKey",
-            "name": "access_token_cookie",  # Nome exato da chave do Flask-JWT-Extended
+            "name": "access_token_cookie",
             "in": "cookie",
             "description": (
                 "Esta API utiliza autenticação baseada em Cookies HTTP-Only para proteção contra XSS.\n\n"

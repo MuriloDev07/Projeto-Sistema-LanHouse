@@ -47,7 +47,7 @@ def create_produto():
 
     categoria_existente = db.session.get(Categoria, dados_validados['categoria_id'])
     if categoria_existente is None:
-        current_app.logger.warning(f"Tentativa de criação falho: Categoria ID {dados_validados['categoria_id']} não existe")
+        current_app.logger.warning(f"Tentativa de criação falha: Categoria ID {dados_validados['categoria_id']} não existe")
         return jsonify({"erro": "Categoria não encontrada"}), 404
 
     if Produto.query.filter_by(nome=dados_validados['nome']).first():
@@ -76,7 +76,7 @@ def remove_produto(produto_id):
     produto = db.session.get(Produto, produto_id)
 
     if produto is None:
-        current_app.logger.warning(f"Tentantiva de exclusão falho: Produto ID {produto_id} não existe")
+        current_app.logger.warning(f"Tentantiva de exclusão falha: Produto ID {produto_id} não existe")
         return jsonify({"erro": "Produto não encontrado"}), 404
 
     with atomic_transaction():
@@ -95,7 +95,7 @@ def update_produto(produto_id):
     produto = db.session.get(Produto, produto_id)
 
     if produto is None:
-        current_app.logger.warning(f"Tentativa de atualização falho: Produto ID {produto_id} não existe")
+        current_app.logger.warning(f"Tentativa de atualização falha: Produto ID {produto_id} não existe")
         return jsonify({"erro": "Produto não encontrado"}), 404
 
     try:
