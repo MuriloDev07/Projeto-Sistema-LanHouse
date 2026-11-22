@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validate, validates_schema, ValidationError
+from marshmallow import Schema, fields, validate
 from decimal import Decimal
 
 class CategoriaSchema(Schema):
@@ -65,38 +65,17 @@ class ServicoSchema(Schema):
         validate=validate.Length(min=2),
         error_messages={"required": "O campo 'grupo' é obrigatório."}
     )
-    preco_base = fields.Decimal(
+    preco = fields.Decimal(
         as_string=True,
         required=True,
         validate=validate.Range(
             min=Decimal('0.01'),
-            error="O preco_base deve ser maior que zero.",
+            error="O preco deve ser maior que zero.",
         ),
-        error_messages={"required": "O campo 'preco_base' é obrigatório."}
-    )
-    preco_maximo = fields.Decimal(
-        allow_none=True,
-        as_string=True,
-        required=False,
-        validate=validate.Range(
-            min=Decimal('0.01'),
-            error="O preco_maximo deve ser maior que zero."
-        ),
+        error_messages={"required": "O campo 'preco' é obrigatório."}
     )
     observacao = fields.String(
         allow_none=True,
         required=False,
         validate=validate.Length(min=2),
     )
-
-    @validates_schema
-    def validar_faixa_preco(self, data, **kwargs):
-        preco_base = data.get('preco_base')
-        preco_maximo = data.get('preco_maximo')
-
-        if preco_maximo is not None and preco_base is not None:
-            if preco_maximo <= preco_base:
-                raise ValidationError(
-                    "O preco máximo deve ser maior que o preço base.",
-                    field_name="preco_maximo"
-                )
