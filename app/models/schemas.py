@@ -52,3 +52,30 @@ class UsuarioSchema(Schema):
         error_messages={"required": "O campo 'senha' é obrigatório."}
     )
     role = fields.String(dump_only=True)
+
+class ServicoSchema(Schema):
+    id = fields.Int(dump_only=True)
+    nome = fields.String(
+        required=True,
+        validate=validate.Length(min=2),
+        error_messages={"required": "O campo 'nome' é obrigatório."}
+    )
+    grupo = fields.String(
+        required=True,
+        validate=validate.Length(min=2),
+        error_messages={"required": "O campo 'grupo' é obrigatório."}
+    )
+    preco = fields.Decimal(
+        as_string=True,
+        required=True,
+        validate=validate.Range(
+            min=Decimal('0.01'),
+            error="O preco deve ser maior que zero.",
+        ),
+        error_messages={"required": "O campo 'preco' é obrigatório."}
+    )
+    observacao = fields.String(
+        allow_none=True,
+        required=False,
+        validate=validate.Length(min=2),
+    )

@@ -25,7 +25,7 @@ def create_app():
     jwt.init_app(app)
     register_jwt_handlers(jwt)
 
-    from app.models import categoria, produto, usuario
+    from app.models import categoria, produto, usuario, servico
     migrate.init_app(app, db)
 
     configure_logging(app)
@@ -34,11 +34,13 @@ def create_app():
     from app.routes.categorias import categorias_bp
     from app.routes.produtos import produtos_bp
     from app.routes.usuarios import usuarios_bp
+    from app.routes.servicos import servicos_bp
     from app.routes.web import web_bp
 
     app.register_blueprint(categorias_bp)
     app.register_blueprint(produtos_bp)
     app.register_blueprint(usuarios_bp)
+    app.register_blueprint(servicos_bp)
     app.register_blueprint(web_bp)
 
     return app

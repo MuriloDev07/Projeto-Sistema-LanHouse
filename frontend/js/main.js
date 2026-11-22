@@ -4,8 +4,11 @@ import { ui } from './ui.js';
 const state = {
     produtos: [],
     categorias: [],
+    servicos: [],
     categoriasMap: {},
     filtroCategoria: 'todas',
+    filtroGrupo: 'todos',
+    abaAtiva: 'produtos',
     termoBusca: '',
     isAdmin: false,
     username: ''
@@ -16,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (savedUser) {
         state.isAdmin = true;
         state.username = savedUser;
-        ui.setAdminMode(true, savedUser);
+        ui.setAdminMode(true, savedUser, state.abaAtiva);
     }
 
     setupEventListeners();
@@ -25,13 +28,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function carregarDadosIniciais() {
     try {
-        const [resCat, resProd] = await Promise.all([
+        const [resCat, resProd, resServ] = await Promise.all([
             api.getCategorias(),
-            api.getProdutos()
+            api.getProdutos(),
+            api.getServicos(),
         ]);
 
         state.categorias = resCat.categorias || [];
         state.produtos = resProd.produtos || [];
+        state.servicos = resServ.servicos || [];
 
         state.categoriasMap = {};
         state.categorias.forEach(c => {
@@ -39,6 +44,7 @@ async function carregarDadosIniciais() {
         });
 
         ui.renderCategorias(state.categorias, state.filtroCategoria);
+        ui.renderGruposServicos(state.servicos, state.filtroGrupo);
         aplicarFiltrosERenderizar();
     } catch (err) {
         document.getElementById('estado-carregamento').textContent =
@@ -48,18 +54,25 @@ async function carregarDadosIniciais() {
 }
 
 function aplicarFiltrosERenderizar() {
-    const filtrados = state.produtos.filter(prod => {
-        const bateCategoria = state.filtroCategoria === 'todas' ||
-            String(prod.categoria_id) === String(state.filtroCategoria);
-        const bateNome = prod.nome.toLowerCase().includes(state.termoBusca.toLowerCase());
-        return bateCategoria && bateNome;
-    });
-
-    ui.renderProdutos(filtrados, state.categoriasMap, state.isAdmin);
+    if (state.abaAtiva === 'produtos') {
+        const filtrados = state.produtos.filter(prod => {
+            const bateCategoria = state.filtroCategoria === 'todas' ||
+                String(prod.categoria_id) === String(state.filtroCategoria);
+            const bateNome = prod.nome.toLowerCase().includes(state.termoBusca.toLowerCase());
+            return bateCategoria && bateNome;
+        });
+        ui.renderProdutos(filtrados, state.categoriasMap, state.isAdmin);
+    } else {
+        const filtrados = state.servicos.filter(serv => {
+            const bateGrupo = state.filtroGrupo === 'todos' || serv.grupo === state.filtroGrupo;
+            const bateNome = serv.nome.toLowerCase().includes(state.termoBusca.toLowerCase());
+            return bateGrupo && bateNome;
+        });
+        ui.renderServicos(filtrados, state.isAdmin);
+    }
 }
 
 function setupEventListeners() {
-    // 10. Registrar Novo Usuário (Restrito ao Admin logado)
     document.getElementById('btn-abrir-registro').addEventListener('click', () => {
         document.getElementById('form-registro').reset();
         document.getElementById('modal-registro').showModal();
@@ -82,6 +95,108 @@ function setupEventListeners() {
             ui.showToast(`Usuário "${username}" cadastrado com sucesso!`);
         } catch (err) {
             ui.showToast(err.message, 'error');
+        }
+    });
+
+    document.querySelector('.tabs-bar').addEventListener('click', (e) => {
+        const tab = e.target.closest('.tab-btn');
+        if (!tab) return;
+
+        state.abaAtiva = tab.dataset.tab;
+        state.termoBusca = '';
+        const inputBusca = document.getElementById('input-busca');
+        inputBusca.value = '';
+        inputBusca.placeholder = state.abaAtiva === 'produtos'
+            ? 'Buscar produto pelo nome...'
+            : 'Buscar serviço pelo nome...';
+
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        tab.classList.add('active');
+
+        const isProdutos = state.abaAtiva === 'produtos';
+        document.getElementById('lista-filtros').classList.toggle('hidden', !isProdutos);
+        document.querySelector('.products-section').classList.toggle('hidden', !isProdutos);
+        document.getElementById('secao-servicos').classList.toggle('hidden', isProdutos);
+
+        ui.setAdminMode(state.isAdmin, state.username, state.abaAtiva);
+        aplicarFiltrosERenderizar();
+    });
+
+    document.getElementById('input-busca').addEventListener('input', (e) => {
+        state.termoBusca = e.target.value.trim();
+        aplicarFiltrosERenderizar();
+    });
+
+    document.getElementById('lista-filtros-servicos').addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-pill');
+        if (!btn) return;
+
+        state.filtroGrupo = btn.dataset.grupo;
+        ui.renderGruposServicos(state.servicos, state.filtroGrupo);
+        aplicarFiltrosERenderizar();
+    });
+
+    document.getElementById('btn-novo-servico').addEventListener('click', () => {
+        document.getElementById('form-servico').reset();
+        document.getElementById('servico-id').value = '';
+        document.getElementById('titulo-modal-servico').textContent = 'Novo Serviço';
+        document.getElementById('modal-servico').showModal();
+    });
+
+    document.getElementById('form-servico').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('servico-id').value;
+        const observacao = document.getElementById('servico-observacao').value.trim();
+        const payload = {
+            nome: document.getElementById('servico-nome').value.trim(),
+            grupo: document.getElementById('servico-grupo').value,
+            preco: parseFloat(document.getElementById('servico-preco').value),
+            observacao: observacao || null
+        };
+
+        try {
+            if (id) {
+                await api.updateServico(id, payload);
+                ui.showToast('Serviço atualizado com sucesso!');
+            } else {
+                await api.createServico(payload);
+                ui.showToast('Serviço cadastrado com sucesso!');
+            }
+            document.getElementById('modal-servico').close();
+            await carregarDadosIniciais();
+        } catch (err) {
+            ui.showToast(err.message, 'error');
+        }
+    });
+
+    document.getElementById('lista-servicos').addEventListener('click', async (e) => {
+        const btnEdit = e.target.closest('[data-edit-serv]');
+        const btnDel = e.target.closest('[data-del-serv]');
+
+        if (btnEdit) {
+            const serv = state.servicos.find(s => String(s.id) === btnEdit.dataset.editServ);
+            if (!serv) return;
+
+            document.getElementById('servico-id').value = serv.id;
+            document.getElementById('servico-nome').value = serv.nome;
+            document.getElementById('servico-grupo').value = serv.grupo;
+            document.getElementById('servico-preco').value = serv.preco;
+            document.getElementById('servico-observacao').value = serv.observacao || '';
+            document.getElementById('titulo-modal-servico').textContent = 'Editar Serviço';
+            document.getElementById('modal-servico').showModal();
+        }
+
+        if (btnDel) {
+            const { delServ: id, nome } = btnDel.dataset;
+            if (!confirm(`Tem certeza que deseja excluir "${nome}"?`)) return;
+
+            try {
+                await api.deleteServico(id);
+                ui.showToast('Serviço removido!');
+                await carregarDadosIniciais();
+            } catch (err) {
+                ui.showToast(err.message, 'error');
+            }
         }
     });
 
@@ -111,7 +226,7 @@ function setupEventListeners() {
             state.isAdmin = false;
             state.username = '';
             sessionStorage.removeItem('admin_user');
-            ui.setAdminMode(false);
+            ui.setAdminMode(false, '', state.abaAtiva);
             aplicarFiltrosERenderizar();
             ui.showToast('Sessão encerrada.');
         }
@@ -128,7 +243,7 @@ function setupEventListeners() {
             state.username = res.user;
             sessionStorage.setItem('admin_user', res.user);
 
-            ui.setAdminMode(true, res.user);
+            ui.setAdminMode(true, res.user, state.abaAtiva);
             aplicarFiltrosERenderizar();
             document.getElementById('modal-login').close();
             ui.showToast(`Bem-vindo, ${res.user}!`);
